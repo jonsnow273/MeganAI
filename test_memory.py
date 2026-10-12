@@ -147,6 +147,49 @@ class TestDigitalMemory(unittest.TestCase):
         self.assertTrue(alice_service.screenshots_dir.exists())
         self.assertTrue(alice_service.vector_dir.exists())
 
+    def test_07_timeline_retrieval(self):
+        """Test chronological timeline retrieval, sorting, and filters for Visual Time Machine."""
+        store_dir = self.temp_dir / "timeline_test"
+        store = VectorMemoryStore(persist_dir=store_dir)
+
+        # Add 3 time-ordered entries
+        store.add_memory(
+            memory_id="shot_100",
+            text="First action: Open GitHub repo and view pull requests",
+            metadata={"timestamp": "2026-10-11T10:00:00", "process_name": "chrome.exe", "window_title": "GitHub - PRs"},
+        )
+        store.add_memory(
+            memory_id="shot_101",
+            text="Second action: Write Python code for activation steering",
+            metadata={"timestamp": "2026-10-11T10:15:00", "process_name": "code.exe", "window_title": "VS Code - steering.py"},
+        )
+        store.add_memory(
+            memory_id="shot_102",
+            text="Third action: Test FastAPI endpoints with curl",
+            metadata={"timestamp": "2026-10-11T10:30:00", "process_name": "powershell.exe", "window_title": "PowerShell"},
+        )
+
+        # Test chronological asc order (past to present)
+        timeline_asc = store.get_timeline(order="asc")
+        self.assertEqual(len(timeline_asc), 3)
+        self.assertEqual(timeline_asc[0]["id"], "shot_100")
+        self.assertEqual(timeline_asc[1]["id"], "shot_101")
+        self.assertEqual(timeline_asc[2]["id"], "shot_102")
+
+        # Test chronological desc order (newest first)
+        timeline_desc = store.get_timeline(order="desc")
+        self.assertEqual(timeline_desc[0]["id"], "shot_102")
+
+        # Test app filter
+        code_timeline = store.get_timeline(app_filter="code")
+        self.assertEqual(len(code_timeline), 1)
+        self.assertEqual(code_timeline[0]["id"], "shot_101")
+
+        # Test query filter
+        pr_timeline = store.get_timeline(query="pull requests")
+        self.assertEqual(len(pr_timeline), 1)
+        self.assertEqual(pr_timeline[0]["id"], "shot_100")
+
 
 if __name__ == "__main__":
     print("\nRunning Megan Digital Memory Unit Tests...\n")

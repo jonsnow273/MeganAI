@@ -51,6 +51,19 @@ class SearchResult(BaseModel):
     score: float
 
 
+class TimelineItem(BaseModel):
+    id: str
+    timestamp: str
+    text: str
+    window_title: str = "Unknown"
+    process_name: str = "unknown"
+    diff_percent: float = 0.0
+    word_count: int = 0
+    screenshot_filename: str
+    screenshot_url: str
+    metadata: Dict[str, Any] = {}
+
+
 class PrivacyConfigRequest(BaseModel):
     enabled: bool = True
     blacklisted_processes: List[str] = []
@@ -112,6 +125,21 @@ async def search_memory(
     """
     results = service.search(query=q, top_k=limit)
     return results
+
+
+@router.get("/timeline", response_model=List[TimelineItem])
+async def get_timeline(
+    limit: int = Query(100, ge=1, le=500, description="Max timeline snapshots"),
+    order: str = Query("asc", description="Timeline sort order: 'asc' or 'desc'"),
+    app: Optional[str] = Query(None, description="Optional application filter"),
+    q: Optional[str] = Query(None, description="Optional text search filter"),
+    service: DigitalMemoryService = Depends(get_service),
+):
+    """
+    Retrieve chronological timeline frames for Visual Time Machine scrubber.
+    Returns ordered snapshots with OCR text, metadata, and screenshot references.
+    """
+    return service.get_timeline(limit=limit, order=order, app_filter=app, query=q)
 
 
 @router.get("/screenshot/{filename}")

@@ -1,15 +1,22 @@
+import { useState } from "react";
 import { useChat } from "./hooks/useChat";
 import { Header } from "./components/Layout/Header";
 import { ChatWindow } from "./components/Chat/ChatWindow";
 import { InputBar } from "./components/Chat/InputBar";
 import { SteeringPanel } from "./components/Steering/SteeringPanel";
+import { VisualTimeMachine } from "./components/Memory/VisualTimeMachine";
 
 export default function App() {
   const { messages, loading, error, sessionId, sendMessage, clearChat } = useChat();
+  const [isTimeMachineOpen, setIsTimeMachineOpen] = useState(false);
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
-      <Header sessionId={sessionId} onClear={clearChat} />
+      <Header
+        sessionId={sessionId}
+        onClear={clearChat}
+        onOpenTimeMachine={() => setIsTimeMachineOpen(true)}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Main chat area */}
@@ -39,6 +46,12 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* Feature #6: Visual Time Machine Slider Modal */}
+      <VisualTimeMachine
+        isOpen={isTimeMachineOpen}
+        onClose={() => setIsTimeMachineOpen(false)}
+      />
     </div>
   );
 }
