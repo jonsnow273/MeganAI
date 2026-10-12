@@ -181,6 +181,65 @@ class VectorMemoryStore:
         scored.sort(key=lambda x: x["score"], reverse=True)
         return scored[:top_k]
 
+    def get_timeline(
+        self,
+        limit: int = 100,
+        order: str = "asc",
+        app_filter: Optional[str] = None,
+        query: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieve chronological timeline of memories for visual scrubber.
+        Supports filtering by app name, query text, and sort order ('asc' or 'desc').
+        """
+        items = list(self._fallback_memories)
+
+        # Optional query filter
+        if query and query.strip():
+            q_clean = query.strip().lower()
+            items = [
+                m for m in items
+                if q_clean in m.get("text", "").lower()
+                or q_clean in m.get("metadata", {}).get("window_title", "").lower()
+                or q_clean in m.get("metadata", {}).get("process_name", "").lower()
+            ]
+
+        # Optional app filter
+        if app_filter and app_filter.strip():
+            af = app_filter.strip().lower()
+            items = [
+                m for m in items
+                if af in m.get("metadata", {}).get("process_name", "").lower()
+                or af in m.get("metadata", {}).get("window_title", "").lower()
+            ]
+
+        # Sort by timestamp
+        def parse_ts(m):
+            ts = m.get("timestamp") or m.get("metadata", {}).get("timestamp", "")
+            return str(ts)
+
+        items.sort(key=parse_ts, reverse=(order.lower() == "desc"))
+
+        # Shape formatted timeline items
+        out = []
+        for m in items[:limit]:
+            meta = m.get("metadata", {})
+            shot_path = meta.get("screenshot_path", "")
+            shot_file = Path(shot_path).name if shot_path else f"{m['id']}.jpg"
+            out.append({
+                "id": m["id"],
+                "timestamp": m.get("timestamp") or meta.get("timestamp", ""),
+                "text": m.get("text", ""),
+                "window_title": meta.get("window_title", "Unknown"),
+                "process_name": meta.get("process_name", "unknown"),
+                "diff_percent": meta.get("diff_percent", 0.0),
+                "word_count": meta.get("word_count", 0),
+                "screenshot_filename": shot_file,
+                "screenshot_url": f"/api/memory/screenshot/{shot_file}",
+                "metadata": meta,
+            })
+        return out
+
     def count(self) -> int:
         """Total number of indexed memories."""
         if self._has_chroma:

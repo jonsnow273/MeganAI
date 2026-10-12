@@ -59,6 +59,13 @@ def create_app() -> FastAPI:
     app.include_router(chat_ws.router)
     app.include_router(voice_ws.router)
 
+    # Mount static web frontend dashboard
+    from pathlib import Path
+    from fastapi.staticfiles import StaticFiles
+    static_dir = Path(__file__).resolve().parent / "static"
+    if static_dir.exists():
+        app.mount("/dashboard", StaticFiles(directory=str(static_dir), html=True), name="static")
+
     @app.on_event("startup")
     async def startup():
         """Load model and wire up all modules on server start."""
