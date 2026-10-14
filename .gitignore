@@ -51,6 +51,7 @@ data/organizer/*
 data/users/*
 data/memory/*
 data/reports/*
+data/macros/*
 data/*.db
 data/*.key
 data/*.json
@@ -58,6 +59,7 @@ data/*.json
 !data/steering_presets/.gitkeep
 !data/logs/.gitkeep
 !data/reports/.gitkeep
+!data/macros/.gitkeep
 *.log
 
 # IDE

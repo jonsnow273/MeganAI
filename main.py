@@ -224,6 +224,9 @@ def main():
     parser.add_argument("--focus-duration", type=int, default=45, help="Focus session duration in minutes (default: 45)")
     parser.add_argument("--standup", action="store_true", help="Generate automated daily standup report from Git, Focus, and Memory")
     parser.add_argument("--standup-date", type=str, default=None, help="Target date for standup report (YYYY-MM-DD)")
+    parser.add_argument("--macro-list", action="store_true", help="List all saved workflow automation macros")
+    parser.add_argument("--macro-run", type=str, default=None, help="Replay a workflow macro by name or ID")
+    parser.add_argument("--macro-dry-run", action="store_true", help="Simulate macro execution without modifying desktop state")
 
     args = parser.parse_args()
 
@@ -369,6 +372,48 @@ def main():
         print(report["markdown"])
         if report.get("report_path"):
             print(f"\n[Saved report to: {report['report_path']}]")
+        return
+
+    if args.macro_list:
+        from automation.macro import MacroStore
+        print(BANNER)
+        print("Available Workflow Automation Macros:\n")
+        store = MacroStore()
+        macros = store.list_macros()
+        if not macros:
+            print("  No macros found.")
+        for m in macros:
+            last = f" (Last run: {m.last_run[:16]})" if m.last_run else ""
+            print(f"  - [{m.id}] {m.name} ({len(m.steps)} steps){last}")
+            if m.description:
+                print(f"      {m.description}")
+        return
+
+    if args.macro_run:
+        from automation.macro import MacroStore, MacroRunner
+        print(BANNER)
+        store = MacroStore()
+        macro = store.get_macro(args.macro_run)
+        if not macro:
+            print(f"[Error] Macro '{args.macro_run}' not found. Use --macro-list to see available macros.")
+            return
+
+        mode_str = "[DRY RUN] " if args.macro_dry_run else ""
+        print(f"{mode_str}Executing Workflow Macro: '{macro.name}' ({len(macro.steps)} steps)...\n")
+
+        runner = MacroRunner()
+
+        def on_step(idx, step, res):
+            status_txt = "OK" if res.get("success") else "FAILED"
+            msg = res.get("message", "")
+            print(f"  [{idx + 1}/{len(macro.steps)}] {step.action_type}: {status_txt} - {msg}")
+
+        result = runner.run(macro=macro, dry_run=args.macro_dry_run, on_step_callback=on_step)
+        if not args.macro_dry_run:
+            store.save_macro(macro)
+
+        outcome = "Completed successfully" if result["success"] else "Failed"
+        print(f"\nMacro {outcome} in {result['duration_seconds']}s.")
         return
 
     if args.organize:
