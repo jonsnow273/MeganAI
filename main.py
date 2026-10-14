@@ -222,6 +222,8 @@ def main():
     parser.add_argument("--memory-search", type=str, default=None, help="Search indexed digital memory via query")
     parser.add_argument("--focus", type=str, default=None, help="Start a focused work session with distraction coach (e.g. --focus 'Coding')")
     parser.add_argument("--focus-duration", type=int, default=45, help="Focus session duration in minutes (default: 45)")
+    parser.add_argument("--standup", action="store_true", help="Generate automated daily standup report from Git, Focus, and Memory")
+    parser.add_argument("--standup-date", type=str, default=None, help="Target date for standup report (YYYY-MM-DD)")
 
     args = parser.parse_args()
 
@@ -348,6 +350,25 @@ def main():
         except KeyboardInterrupt:
             service.stop()
             print("\nDigital Memory stopped.")
+        return
+
+    if args.standup:
+        from standup import StandupGenerator
+        from datetime import date
+        print(BANNER)
+        target_d = None
+        if args.standup_date:
+            try:
+                target_d = date.fromisoformat(args.standup_date)
+            except ValueError:
+                print(f"[Error] Invalid date format: '{args.standup_date}'. Use YYYY-MM-DD.")
+                return
+        gen = StandupGenerator()
+        print(f"Synthesizing Daily Standup Report for {target_d or date.today()}...\n")
+        report = gen.generate(target_date=target_d)
+        print(report["markdown"])
+        if report.get("report_path"):
+            print(f"\n[Saved report to: {report['report_path']}]")
         return
 
     if args.organize:

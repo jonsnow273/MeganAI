@@ -50,12 +50,14 @@ data/logs/*
 data/organizer/*
 data/users/*
 data/memory/*
+data/reports/*
 data/*.db
 data/*.key
 data/*.json
 !data/conversation_history/.gitkeep
 !data/steering_presets/.gitkeep
 !data/logs/.gitkeep
+!data/reports/.gitkeep
 *.log
 
 # IDE

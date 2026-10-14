@@ -6,6 +6,7 @@ import { ChatWindow } from "./components/Chat/ChatWindow";
 import { InputBar } from "./components/Chat/InputBar";
 import { SteeringPanel } from "./components/Steering/SteeringPanel";
 import { VisualTimeMachine } from "./components/Memory/VisualTimeMachine";
+import { StandupModal } from "./components/Standup/StandupModal";
 
 const API = "http://localhost:8000";
 
@@ -15,6 +16,7 @@ export default function App() {
   // Layout state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isTimeMachineOpen, setIsTimeMachineOpen] = useState(false);
+  const [isStandupOpen, setIsStandupOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
 
   // Ping backend connectivity
@@ -70,6 +72,7 @@ export default function App() {
           sessionId={sessionId}
           onClear={clearChat}
           onOpenTimeMachine={() => setIsTimeMachineOpen(true)}
+          onOpenStandup={() => setIsStandupOpen(true)}
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
           isConnected={isConnected}
@@ -137,6 +140,12 @@ export default function App() {
       <VisualTimeMachine
         isOpen={isTimeMachineOpen}
         onClose={() => setIsTimeMachineOpen(false)}
+      />
+
+      {/* Daily Standup Report modal */}
+      <StandupModal
+        isOpen={isStandupOpen}
+        onClose={() => setIsStandupOpen(false)}
       />
     </div>
   );
