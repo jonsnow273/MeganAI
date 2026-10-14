@@ -17,9 +17,15 @@ Quick usage:
 from automation.whitelist import WhitelistManager
 from automation.confirmation import ConfirmationManager
 from automation.action_handler import ActionHandler
+from automation.macro import Macro, MacroStep, MacroStore, MacroRunner, MacroRecorder
 
 __all__ = [
     "WhitelistManager",
     "ConfirmationManager",
     "ActionHandler",
+    "Macro",
+    "MacroStep",
+    "MacroStore",
+    "MacroRunner",
+    "MacroRecorder",
 ]

@@ -7,6 +7,7 @@ import { InputBar } from "./components/Chat/InputBar";
 import { SteeringPanel } from "./components/Steering/SteeringPanel";
 import { VisualTimeMachine } from "./components/Memory/VisualTimeMachine";
 import { StandupModal } from "./components/Standup/StandupModal";
+import { MacroRecorderModal } from "./components/Automation/MacroRecorderModal";
 
 const API = "http://localhost:8000";
 
@@ -17,6 +18,7 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isTimeMachineOpen, setIsTimeMachineOpen] = useState(false);
   const [isStandupOpen, setIsStandupOpen] = useState(false);
+  const [isMacrosOpen, setIsMacrosOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
 
   // Ping backend connectivity
@@ -73,6 +75,7 @@ export default function App() {
           onClear={clearChat}
           onOpenTimeMachine={() => setIsTimeMachineOpen(true)}
           onOpenStandup={() => setIsStandupOpen(true)}
+          onOpenMacros={() => setIsMacrosOpen(true)}
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
           isConnected={isConnected}
@@ -146,6 +149,12 @@ export default function App() {
       <StandupModal
         isOpen={isStandupOpen}
         onClose={() => setIsStandupOpen(false)}
+      />
+
+      {/* Autonomous Workflow Macro Recorder modal */}
+      <MacroRecorderModal
+        isOpen={isMacrosOpen}
+        onClose={() => setIsMacrosOpen(false)}
       />
     </div>
   );

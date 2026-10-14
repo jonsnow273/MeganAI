@@ -26,6 +26,7 @@ from api.routes import auth as auth_routes
 from api.routes import memory as memory_routes
 from api.routes import focus as focus_routes
 from api.routes import standup as standup_routes
+from api.routes import macro as macro_routes
 
 # Import WebSocket modules
 from api.websocket import chat_ws
@@ -56,6 +57,7 @@ def create_app() -> FastAPI:
     app.include_router(memory_routes.router)
     app.include_router(focus_routes.router)
     app.include_router(standup_routes.router)
+    app.include_router(macro_routes.router)
 
     # WebSocket routes
     app.include_router(chat_ws.router)

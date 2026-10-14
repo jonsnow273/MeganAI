@@ -1,10 +1,11 @@
-import { Clock, PanelLeftOpen, PanelLeftClose, Trash2, Wifi, WifiOff, FileText } from "lucide-react";
+import { Clock, PanelLeftOpen, PanelLeftClose, Trash2, Wifi, WifiOff, FileText, Command } from "lucide-react";
 
 interface Props {
   sessionId: string | null;
   onClear: () => void;
   onOpenTimeMachine?: () => void;
   onOpenStandup?: () => void;
+  onOpenMacros?: () => void;
   sidebarCollapsed: boolean;
   onToggleSidebar: () => void;
   isConnected?: boolean;
@@ -15,6 +16,7 @@ export function Header({
   onClear,
   onOpenTimeMachine,
   onOpenStandup,
+  onOpenMacros,
   sidebarCollapsed,
   onToggleSidebar,
   isConnected = true,
@@ -97,6 +99,22 @@ export function Header({
           >
             <FileText className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Standup</span>
+          </button>
+        )}
+
+        {/* Workflow Macro Recorder */}
+        {onOpenMacros && (
+          <button
+            onClick={onOpenMacros}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium
+              bg-surface-800 hover:bg-surface-700
+              border border-surface-600 hover:border-megan-700/50
+              text-zinc-400 hover:text-megan-300
+              transition-all duration-200"
+            title="Workflow Macro Recorder & Automation"
+          >
+            <Command className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Macros</span>
           </button>
         )}
 
