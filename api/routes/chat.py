@@ -59,7 +59,10 @@ async def send_message(req: ChatMessageRequest):
 
     # Generate response
     if _engine is not None:
-        response_text = _engine.generate(messages)
+        if _steering_engine and _steering_engine.status.get("active"):
+            response_text = _steering_engine.generate_steered(messages)
+        else:
+            response_text = _engine.generate(messages)
     else:
         # Development / Degraded Fallback Mode
         active_preset = "neutral"
