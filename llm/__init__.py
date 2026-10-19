@@ -1,17 +1,21 @@
 """
-LLM module — Local model loading and inference for Megan.
-
-Usage:
-    from llm import loader, engine
-    loader.load()
-    response = engine.quick_chat("Hello, Megan!")
+LLM module — Cloud Gateway model inference for Megan.
+Provides drop-in replacements for local model loading.
 """
 
-from llm.loader import ModelLoader
-from llm.inference import InferenceEngine
+from llm.gateway_client import GatewayClient, gateway_client
+from llm.inference import GatewayInferenceEngine, MockLoader, loader, engine
 
-# Global singletons used across Megan
-loader = ModelLoader()
-engine = InferenceEngine(loader)
+ModelLoader = MockLoader
+InferenceEngine = GatewayInferenceEngine
 
-__all__ = ["ModelLoader", "InferenceEngine", "loader", "engine"]
+__all__ = [
+    "GatewayClient",
+    "gateway_client",
+    "GatewayInferenceEngine",
+    "InferenceEngine",
+    "MockLoader",
+    "ModelLoader",
+    "loader",
+    "engine",
+]

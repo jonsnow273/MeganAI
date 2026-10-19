@@ -94,13 +94,13 @@ async def calibrate():
 @router.get("/presets")
 async def list_presets():
     """List available steering presets."""
-    from steering.presets import PRESETS
+    from steering.presets import PRESETS_REGISTRY
     presets = []
-    for name, p in PRESETS.items():
+    for name, p in PRESETS_REGISTRY.items():
         presets.append({
             "name": name,
-            "description": p.get("description", ""),
-            "default_alpha": p.get("default_alpha", 1.5),
-            "target_layer": p.get("target_layer"),
+            "description": p.description,
+            "default_alpha": p.recommended_strength,
+            "target_layer": p.target_layer,
         })
     return presets
