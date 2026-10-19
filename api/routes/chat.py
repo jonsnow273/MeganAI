@@ -1,6 +1,7 @@
 """
 Chat REST API routes for Megan.
 Handles message sending, session management, and conversation history.
+Powered by the Gateway client for fast, intelligent reasoning.
 """
 
 from fastapi import APIRouter, HTTPException
@@ -10,20 +11,15 @@ from core import logger
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
-
-# These will be set by server.py at startup
+# Runtime dependencies set at startup
 _engine = None
-_steering_engine = None
-_context_manager = None
 _sessions = {}  # session_id -> ConversationHistory
 
 
-def init(engine, steering_engine, context_manager):
+def init(engine, steering_engine=None, context_manager=None):
     """Wire up runtime dependencies from server startup."""
-    global _engine, _steering_engine, _context_manager
+    global _engine
     _engine = engine
-    _steering_engine = steering_engine
-    _context_manager = context_manager
 
 
 @router.post("/message", response_model=ChatMessageResponse)
@@ -47,51 +43,35 @@ async def send_message(req: ChatMessageRequest):
     # Inject system prompt if empty session
     if len(history) == 0:
         lang = req.language or "en"
-        history.add_system(load_system_prompt(lang))
+        try:
+            history.add_system(load_system_prompt(lang))
+        except Exception:
+            history.add_system("You are Megan, a helpful, intelligent desktop AI assistant. Do not use emojis.")
 
     # Add user message
     history.add("user", req.message)
 
-    # Trim context if needed
+    # Format messages for gateway
     messages = history.to_llm_format()
-    if _context_manager:
-        messages = _context_manager.trim(messages)
 
-    # Generate response
+    # Generate response via Gateway engine
     if _engine is not None:
-        if _steering_engine and _steering_engine.status.get("active"):
-            response_text = _steering_engine.generate_steered(messages)
-        else:
+        try:
             response_text = _engine.generate(messages)
+        except Exception as e:
+            logger.error(f"Engine generation error: {e}")
+            response_text = f"An error occurred while generating a response: {e}"
     else:
-        # Development / Degraded Fallback Mode
-        active_preset = "neutral"
-        if _steering_engine and _steering_engine.status.get("active"):
-            active_preset = _steering_engine.status.get("preset", "neutral")
-        
-        user_msg = req.message.lower()
-        if "hello" in user_msg or "hi" in user_msg or "hey" in user_msg:
-            response_text = f"Hello! I am Megan, your local AI assistant with controllable internal behavior. (Running in local preview mode - Steering preset: {active_preset}). How can I help you today?"
-        elif "help" in user_msg:
-            response_text = "I can assist you with local file organization, activation steering behavior experiments, digital screen memory recall, and whitelisted system automation!"
-        else:
-            response_text = f"I received your message: \"{req.message}\". Megan's local engine is running in preview mode with active steering preset '{active_preset}'."
+        from llm import engine as default_engine
+        response_text = default_engine.generate(messages)
 
     history.add("assistant", response_text)
-
-    # Get steering status
-    steering_info = None
-    if _steering_engine:
-        status = _steering_engine.status
-        if status.get("active"):
-            steering_info = status.get("preset")
-
     logger.info(f"[{history.session_id}] User: {req.message[:50]}... -> {len(response_text)} chars")
 
     return ChatMessageResponse(
         response=response_text,
         session_id=history.session_id,
-        steering_active=steering_info,
+        steering_active=None,
     )
 
 
@@ -110,6 +90,12 @@ async def get_history(session_id: str):
     if history is None:
         raise HTTPException(status_code=404, detail=f"Session not found: {session_id}")
     return {"session_id": session_id, "messages": history.to_llm_format()}
+
+
+@router.get("/sessions/{session_id}/messages")
+async def get_session_messages(session_id: str):
+    """Compatibility endpoint matching frontend App.tsx fetch."""
+    return await get_history(session_id)
 
 
 @router.delete("/history/{session_id}")
