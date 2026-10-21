@@ -36,11 +36,14 @@ class GatewayInferenceEngine:
         max_new_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
     ) -> Generator[str, None, None]:
-        """Stream response word-by-word."""
-        full_text = self.generate(messages, max_new_tokens, temperature)
-        words = full_text.split(" ")
-        for i, word in enumerate(words):
-            yield word + (" " if i < len(words) - 1 else "")
+        """Stream response tokens from the gateway as they arrive."""
+        tokens = max_new_tokens or 1024
+        temp = temperature if temperature is not None else 0.7
+        yield from self.client.chat_stream(
+            messages=messages,
+            max_tokens=tokens,
+            temperature=temp,
+        )
 
     def quick_chat(self, user_message: str, system_prompt: Optional[str] = None) -> str:
         """Single-turn generation convenience method."""
