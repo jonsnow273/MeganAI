@@ -20,22 +20,39 @@ class ScreenAnalysisRequest(BaseModel):
 
 class ScreenAnalysisResponse(BaseModel):
     diagnosis: str
+    analysis: str
     query: str
     dimensions: str
     preview_thumbnail: str
+    screenshot_url: str
 
 
 @router.post("/analyze", response_model=ScreenAnalysisResponse)
-async def analyze_screen(req: ScreenAnalysisRequest):
+async def analyze_screen(req: Optional[ScreenAnalysisRequest] = None):
     """
     Take a live snapshot of the user's primary monitor and run multimodal vision diagnosis.
+    Supports empty payload for one-click inspection.
     """
     try:
+        user_query = req.query if req and req.query else "Analyze my current screen. What is happening, identify any errors or issues, and provide the exact fix."
+        target_model = req.model if req else None
+
         result = copilot_service.analyze_screen(
-            user_query=req.query,
-            target_model=req.model,
+            user_query=user_query,
+            target_model=target_model,
         )
-        return ScreenAnalysisResponse(**result)
+
+        diagnosis_text = result.get("diagnosis", "")
+        thumbnail = result.get("preview_thumbnail", "")
+
+        return ScreenAnalysisResponse(
+            diagnosis=diagnosis_text,
+            analysis=diagnosis_text,
+            query=result.get("query", user_query),
+            dimensions=result.get("dimensions", "1280x720"),
+            preview_thumbnail=thumbnail,
+            screenshot_url=thumbnail,
+        )
     except Exception as e:
         logger.error(f"Screen Copilot analysis failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))

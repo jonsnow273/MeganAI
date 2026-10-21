@@ -3,190 +3,59 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────
-   CloudStudio-inspired animated accent theme
-   Gradient cycles: violet → cyan → indigo
+   Minimal ChatGPT-style theme
+   Plain dark background, no colors/gradients
    ───────────────────────────────────────── */
 
-@keyframes gradientShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+* {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
 }
-
-@keyframes glowPulse {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50%       { opacity: 0.8; transform: scale(1.08); }
-}
-
-@keyframes recordPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
-  50%       { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-}
-
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-16px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(16px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-@keyframes typingDot {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30%            { transform: translateY(-4px); opacity: 1; }
-}
-
-/* ── Animated gradient text / border ── */
-.megan-gradient {
-  background: linear-gradient(
-    135deg,
-    #8b5cf6 0%,
-    #6366f1 25%,
-    #0ea5e9 50%,
-    #8b5cf6 75%,
-    #a78bfa 100%
-  );
-  background-size: 300% 300%;
-  animation: gradientShift 6s ease infinite;
-}
-
-.megan-gradient-text {
-  background: linear-gradient(
-    135deg,
-    #a78bfa 0%,
-    #818cf8 30%,
-    #38bdf8 60%,
-    #a78bfa 100%
-  );
-  background-size: 300% 300%;
-  animation: gradientShift 5s ease infinite;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Shimmer for loading skeletons */
-.megan-shimmer {
-  background: linear-gradient(
-    90deg,
-    #1f1f2e 0%,
-    #2d2d45 40%,
-    #1f1f2e 80%
-  );
-  background-size: 200% auto;
-  animation: shimmer 1.6s linear infinite;
-}
-
-/* Glow behind accent elements */
-.megan-glow {
-  position: relative;
-}
-.megan-glow::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, #8b5cf6, #38bdf8);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: -1;
-  filter: blur(8px);
-}
-.megan-glow:hover::before {
-  opacity: 0.5;
-  animation: glowPulse 2s ease infinite;
-}
-
-/* Recording button pulse */
-.recording-pulse {
-  animation: recordPulse 1.2s ease infinite;
-}
-
-/* Message entrance */
-.message-enter {
-  animation: fadeSlideIn 0.25s ease forwards;
-}
-
-/* Sidebar slide-in */
-.sidebar-enter {
-  animation: slideInLeft 0.3s ease forwards;
-}
-
-/* Modal fade-in */
-.modal-enter {
-  animation: fadeIn 0.2s ease forwards;
-}
-
-/* Typing dots */
-.typing-dot {
-  animation: typingDot 1.2s ease infinite;
-}
-.typing-dot:nth-child(2) { animation-delay: 0.15s; }
-.typing-dot:nth-child(3) { animation-delay: 0.3s; }
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar          { width: 5px; height: 5px; }
-::-webkit-scrollbar-track    { background: transparent; }
-::-webkit-scrollbar-thumb    { background: #3f3f56; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #6366f1; }
-
-/* ── Base ── */
-* { scroll-behavior: smooth; box-sizing: border-box; }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #09090f;
-  color: #e4e4f0;
+  background: #0d0d0d;
+  color: #ececec;
   -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0;
 }
 
-/* ── Range slider (Radix override + native) ── */
-input[type='range'] {
-  -webkit-appearance: none;
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 4px;
   height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
   border-radius: 2px;
-  outline: none;
-  cursor: pointer;
 }
-input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #8b5cf6, #38bdf8);
-  box-shadow: 0 0 6px rgba(139, 92, 246, 0.6);
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-input[type='range']::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.9);
-}
-
-/* ── Textarea reset ── */
-textarea:focus, input:focus {
-  outline: none;
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a3a;
 }
 
 /* ── Selection ── */
 ::selection {
-  background: rgba(139, 92, 246, 0.35);
+  background: rgba(255, 255, 255, 0.12);
   color: #fff;
+}
+
+/* ── Focus reset ── */
+textarea:focus,
+input:focus,
+button:focus {
+  outline: none;
+}
+
+/* ── Fade in animation ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.2s ease;
 }

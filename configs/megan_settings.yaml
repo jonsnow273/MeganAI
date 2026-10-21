@@ -1,29 +1,18 @@
 # Megan Master Configuration
-# Core Identity: The first local AI assistant with controllable internal behavior
+# Core Identity: Privacy-First AI Desktop Assistant with Multimodal Screen Copilot
 
 assistant:
   name: "Megan"
-  tagline: "Controllable Local AI Assistant"
+  tagline: "Multimodal Desktop AI Assistant"
   wake_phrase: "hey megan"
   default_language: "en"
 
-# Activation Steering Subsystem (Core Research Feature)
-steering:
-  enabled: true
-  default_preset: "neutral"       # Options: neutral, cautious, concise, detailed, creative
-  default_strength: 1.5           # Default scalar multiplier α
-  max_safe_strength: 2.8          # Beyond this, warnings for potential perplexity degradation
-  target_layer_default: 16        # Default residual stream layer for general interventions
-  side_by_side_comparison: true   # Enable dual-stream comparison in dashboard
-  telemetry_logging: true         # Record layer activation norms during forward passes
-
-# Local LLM Core
+# LLM Gateway Core
 llm:
-  model_name: "Qwen/Qwen2.5-0.5B-Instruct"
-  alternate_model: "mistralai/Mistral-7B-Instruct-v0.3"
-  device: "cuda"                  # cuda, cpu, or mps
-  quantization: "4bit"            # 4bit, 8bit, or none
-  max_new_tokens: 512
+  model_name: "kilo-auto/free"
+  vision_model: "nvidia/nemotron-3.5-super-vl:free"
+  alternate_model: "nvidia/nemotron-3.5-lightning:free"
+  max_new_tokens: 1024
   temperature: 0.7
   top_p: 0.9
 

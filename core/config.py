@@ -65,7 +65,7 @@ class ConfigManager:
     def get(self, key_path: str, default: Any = None) -> Any:
         """
         Retrieve nested config values using dot-notation.
-        Example: config.get("steering.default_preset", "neutral")
+        Example: config.get("assistant.name", "Megan")
         """
         parts = key_path.split(".")
         current = self._settings
@@ -86,31 +86,10 @@ class ConfigManager:
     def default_language(self) -> str:
         return self.get("assistant.default_language", "en")
 
-    # Steering settings
-    @property
-    def steering_enabled(self) -> bool:
-        return bool(self.get("steering.enabled", True))
-
-    @property
-    def default_steering_preset(self) -> str:
-        return str(self.get("steering.default_preset", "neutral"))
-
-    @property
-    def default_steering_strength(self) -> float:
-        return float(self.get("steering.default_strength", 1.5))
-
-    @property
-    def max_safe_steering_strength(self) -> float:
-        return float(self.get("steering.max_safe_strength", 2.8))
-
-    @property
-    def default_target_layer(self) -> int:
-        return int(self.get("steering.target_layer_default", 16))
-
     # LLM settings
     @property
     def model_name(self) -> str:
-        return str(self.get("llm.model_name", "Qwen/Qwen2.5-0.5B-Instruct"))
+        return str(self.get("llm.model_name", "kilo-auto/free"))
 
     @property
     def default_model(self) -> str:
@@ -118,22 +97,19 @@ class ConfigManager:
 
     @property
     def alternate_model_name(self) -> str:
-        return str(self.get("llm.alternate_model", "mistralai/Mistral-7B-Instruct-v0.3"))
+        return str(self.get("llm.alternate_model", "nvidia/nemotron-3.5-lightning:free"))
 
     @property
     def device(self) -> str:
-        env_device = os.getenv("INES_DEVICE")
-        if env_device:
-            return env_device.lower()
-        return str(self.get("llm.device", "cuda"))
+        return "cloud"
 
     @property
     def quantization(self) -> str:
-        return str(self.get("llm.quantization", "4bit"))
+        return "none"
 
     @property
     def max_new_tokens(self) -> int:
-        return int(self.get("llm.max_new_tokens", 512))
+        return int(self.get("llm.max_new_tokens", 1024))
 
     @property
     def temperature(self) -> float:
@@ -141,11 +117,7 @@ class ConfigManager:
 
     @property
     def max_context_tokens(self) -> int:
-        return int(self.get("llm.max_context_tokens", 3500))
-
-    @property
-    def default_language(self) -> str:
-        return str(self.get("assistant.default_language", "en"))
+        return int(self.get("llm.max_context_tokens", 4096))
 
     # Automation settings
     @property

@@ -8,5 +8,5 @@ export interface Message {
 export interface ChatResponse {
   response: string;
   session_id: string;
-  steering_active: string | null;
+  steering_active?: string | null;
 }
