@@ -1,28 +1,13 @@
 # Megan - Model Configuration
 
-primary_model:
-  repo_id: "mistralai/Mistral-7B-Instruct-v0.3"
-  model_type: "mistral"
-  quantization: "4bit"          # 4bit = ~4 GB VRAM | 8bit = ~8 GB VRAM | none = ~14 GB VRAM
-  device_map: "auto"
-  max_context_length: 4096
-
-alternate_model:
-  # Lighter option for low-VRAM machines
-  repo_id: "google/gemma-2-2b-it"
-  model_type: "gemma2"
-  quantization: "4bit"
-  device_map: "auto"
-  max_context_length: 8192
+gateway:
+  primary_model: "kilo-auto/free"
+  vision_model: "nvidia/nemotron-3.5-super-vl:free"
+  alternate_model: "nvidia/nemotron-3.5-lightning:free"
+  base_url: "https://ai-gateway.kilo.ai/api/v1"
 
 whisper:
   model_size: "medium"          # tiny | base | small | medium | large-v3
-  device: "cuda"
-  compute_type: "float16"       # float16 (GPU) or int8 (CPU)
+  device: "cpu"
+  compute_type: "int8"          # float16 (GPU) or int8 (CPU)
   language: null                # null = auto-detect
-
-transformerlens:
-  # Must match primary_model for activation steering to work
-  model_name: "mistral-7b"
-  center_writing_weights: true
-  fold_ln: true

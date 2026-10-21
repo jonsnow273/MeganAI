@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Mic, MicOff, Loader2, AlertCircle, X } from "lucide-react";
-import { useVoice } from "../../hooks/useVoice";
+import { useState, useRef, useEffect } from "react";
+import { Plus, Mic, Send } from "lucide-react";
 
 interface Props {
   onSend: (message: string) => void;
@@ -11,25 +10,12 @@ export function InputBar({ onSend, disabled }: Props) {
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Wire voice → auto-fill textarea
-  const handleTranscript = useCallback((t: string) => {
-    setText((prev) => (prev.trim() ? `${prev} ${t}` : t));
-    setTimeout(() => textareaRef.current?.focus(), 50);
-  }, []);
-
-  const { state: voiceState, isAvailable, error: voiceError, startRecording, stopRecording, clearTranscript } =
-    useVoice(handleTranscript);
-
-  const isRecording    = voiceState === "recording";
-  const isTranscribing = voiceState === "transcribing";
-  const hasVoiceError  = voiceState === "error";
-
   // Auto-resize textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }, [text]);
 
   // Focus on enable
@@ -42,7 +28,6 @@ export function InputBar({ onSend, disabled }: Props) {
     if (!trimmed || disabled) return;
     onSend(trimmed);
     setText("");
-    // reset textarea height
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
@@ -53,145 +38,55 @@ export function InputBar({ onSend, disabled }: Props) {
     }
   };
 
-  const handleMicClick = () => {
-    if (isRecording) {
-      stopRecording();
-    } else if (isTranscribing) {
-      // wait — do nothing
-    } else {
-      clearTranscript();
-      startRecording();
-    }
-  };
-
   return (
-    <div className="border-t border-surface-700 bg-surface-900/80 backdrop-blur-sm px-4 pt-3 pb-4">
-      {/* Voice error / transcribing banner */}
-      {(hasVoiceError || isTranscribing) && (
-        <div
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg mb-2 text-xs max-w-3xl mx-auto transition-all
-            ${hasVoiceError
-              ? "bg-red-950/40 border border-red-800/50 text-red-300"
-              : "bg-megan-900/40 border border-megan-700/40 text-megan-300"
-            }`}
-        >
-          {isTranscribing ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
-              <span>Transcribing with Whisper…</span>
-            </>
-          ) : (
-            <>
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="flex-1">{voiceError}</span>
-              <button onClick={clearTranscript} className="hover:text-white transition-colors">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </>
-          )}
-        </div>
-      )}
+    <div className="flex flex-col items-center px-4 py-4 bg-dark-bg">
+      {/* Centered pill input */}
+      <div className="w-full max-w-3xl">
+        <div className="relative flex items-end gap-2 bg-dark-surface border border-dark-border rounded-3xl px-3 py-2.5 focus-within:border-dark-subtle transition-colors">
+          {/* Plus button */}
+          <button
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
+            aria-label="Attach"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
 
-      <div className="flex gap-2 items-end max-w-3xl mx-auto">
-        {/* Textarea wrapper */}
-        <div
-          className={`
-            relative flex-1 rounded-2xl border transition-all duration-200
-            bg-surface-800
-            ${isRecording
-              ? "border-red-500/70 shadow-[0_0_0_3px_rgba(239,68,68,0.15)]"
-              : "border-surface-600 focus-within:border-megan-500/70 focus-within:shadow-[0_0_0_3px_rgba(139,92,246,0.12)]"
-            }
-          `}
-        >
-          {/* Recording pulse overlay */}
-          {isRecording && (
-            <div className="absolute inset-0 rounded-2xl pointer-events-none overflow-hidden">
-              <div className="absolute inset-0 bg-red-500/5 animate-pulse" />
-              <div className="absolute top-2 right-3 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-red-500 recording-pulse" />
-                <span className="text-[11px] text-red-400 font-medium">Recording…</span>
-              </div>
-            </div>
-          )}
-
+          {/* Textarea */}
           <textarea
             ref={textareaRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={
-              isRecording
-                ? "Listening… press mic to stop"
-                : isTranscribing
-                ? "Transcribing…"
-                : disabled
-                ? "Megan is thinking…"
-                : "Message Megan… (Enter to send, Shift+Enter for newline)"
-            }
-            disabled={disabled || isTranscribing}
+            placeholder="Message Megan"
+            disabled={disabled}
             rows={1}
-            className={`
-              w-full bg-transparent text-zinc-100 placeholder-zinc-600
-              px-4 py-3 pr-12 resize-none text-sm leading-relaxed
-              transition-colors duration-150
-              ${(disabled || isTranscribing) ? "opacity-50 cursor-not-allowed" : ""}
-            `}
-            style={{ maxHeight: "160px" }}
+            className="flex-1 bg-transparent text-dark-text placeholder-dark-muted text-sm resize-none focus:outline-none disabled:opacity-50 max-h-[200px]"
           />
 
-          {/* Inline send button (inside textarea wrapper) */}
+          {/* Mic button */}
+          <button
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
+            aria-label="Voice input"
+          >
+            <Mic className="w-4.5 h-4.5" />
+          </button>
+
+          {/* Send button */}
           <button
             onClick={handleSend}
-            disabled={disabled || !text.trim() || isTranscribing}
-            aria-label="Send message"
-            className={`
-              absolute right-2.5 bottom-2.5 p-1.5 rounded-xl transition-all duration-200
-              ${text.trim() && !disabled && !isTranscribing
-                ? "bg-gradient-megan text-white shadow-glow-sm hover:shadow-glow opacity-100 scale-100"
-                : "bg-surface-700 text-zinc-600 opacity-50 scale-95 cursor-not-allowed"
-              }
-            `}
+            disabled={disabled || !text.trim()}
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Send"
           >
-            {disabled
-              ? <Loader2 className="w-4 h-4 animate-spin" />
-              : <Send className="w-4 h-4" />
-            }
+            <Send className="w-4.5 h-4.5" />
           </button>
         </div>
 
-        {/* Mic button */}
-        {isAvailable && (
-          <button
-            onClick={handleMicClick}
-            disabled={isTranscribing || disabled}
-            aria-label={isRecording ? "Stop recording" : "Start voice input"}
-            title={isRecording ? "Stop recording" : "Voice input (Whisper)"}
-            className={`
-              flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center
-              transition-all duration-200 border
-              ${isRecording
-                ? "bg-red-600 hover:bg-red-500 border-red-500 text-white recording-pulse shadow-[0_0_16px_rgba(239,68,68,0.5)]"
-                : isTranscribing
-                ? "bg-surface-700 border-surface-600 text-megan-400 cursor-wait"
-                : "bg-surface-800 hover:bg-surface-700 border-surface-600 hover:border-megan-500/50 text-zinc-400 hover:text-megan-400"
-              }
-            `}
-          >
-            {isTranscribing
-              ? <Loader2 className="w-4.5 h-4.5 animate-spin" />
-              : isRecording
-              ? <MicOff className="w-4.5 h-4.5" />
-              : <Mic className="w-4.5 h-4.5" />
-            }
-          </button>
-        )}
+        {/* Disclaimer */}
+        <p className="text-center text-xs text-dark-subtle mt-2">
+          Megan can make mistakes. Check important info.
+        </p>
       </div>
-
-      {/* Keyboard hint */}
-      <p className="text-center text-[10px] text-zinc-700 mt-2 max-w-3xl mx-auto">
-        Enter to send · Shift+Enter for new line{isAvailable ? " · Mic for voice" : ""}
-      </p>
     </div>
   );
 }

@@ -1,151 +1,155 @@
 import { useState, useCallback, useEffect } from "react";
+import { X } from "lucide-react";
 import { useChat } from "./hooks/useChat";
 import { Header } from "./components/Layout/Header";
 import { Sidebar } from "./components/Layout/Sidebar";
 import { ChatWindow } from "./components/Chat/ChatWindow";
 import { InputBar } from "./components/Chat/InputBar";
-import { ScreenCopilotPanel } from "./components/Copilot/ScreenCopilotPanel";
-import { VisualTimeMachine } from "./components/Memory/VisualTimeMachine";
-import { StandupModal } from "./components/Standup/StandupModal";
-import { MacroRecorderModal } from "./components/Automation/MacroRecorderModal";
+import { ScreenCopilotView } from "./components/Features/ScreenCopilotView";
+import { TimeMachineView } from "./components/Features/TimeMachineView";
+import { StandupView } from "./components/Features/StandupView";
+import { MacrosView } from "./components/Features/MacrosView";
+
+type View = "chat" | "copilot" | "timemachine" | "standup" | "macros";
 
 const API = "http://localhost:8000";
+
+function generateTitle(firstMessage: string): string {
+  if (!firstMessage || firstMessage.trim().length === 0) return "New conversation";
+  const cleaned = firstMessage.trim().slice(0, 60);
+  return cleaned.length < firstMessage.trim().length ? `${cleaned}...` : cleaned;
+}
 
 export default function App() {
   const { messages, loading, error, sessionId, sendMessage, clearChat } = useChat();
 
-  // Layout state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isTimeMachineOpen, setIsTimeMachineOpen] = useState(false);
-  const [isStandupOpen, setIsStandupOpen] = useState(false);
-  const [isMacrosOpen, setIsMacrosOpen] = useState(false);
-  const [isConnected, setIsConnected] = useState(true);
+  const [currentView, setCurrentView] = useState<View>("chat");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Ping backend connectivity
-  useEffect(() => {
-    let cancelled = false;
-    const check = async () => {
-      try {
-        const res = await fetch(`${API}/health`, { signal: AbortSignal.timeout(3000) });
-        if (!cancelled) setIsConnected(res.ok);
-      } catch {
-        if (!cancelled) setIsConnected(false);
-      }
-    };
-    check();
-    const interval = setInterval(check, 15000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, []);
+  // Derive conversation title from first user message
+  const conversationTitle = messages.length > 0 && messages[0].role === "user"
+    ? generateTitle(messages[0].content)
+    : undefined;
 
-  // Load a past session
+  // New Chat handler — creates fresh session and returns to chat view
+  const handleNewChat = useCallback(() => {
+    clearChat();
+    setCurrentView("chat");
+    setMobileMenuOpen(false);
+  }, [clearChat]);
+
+  // Select session — load messages for that session (placeholder, needs backend support)
   const handleSelectSession = useCallback(async (sid: string) => {
+    setCurrentView("chat");
+    setMobileMenuOpen(false);
     try {
       const res = await fetch(`${API}/api/chat/sessions/${sid}/messages`);
       if (res.ok) {
+        // Load session messages — requires useChat to expose a loadSession method
         await res.json();
       }
     } catch {
-      // graceful best-effort
+      // silent
     }
   }, []);
 
-  const handleNewChat = useCallback(() => {
-    clearChat();
-  }, [clearChat]);
+  // Navigate to feature view
+  const handleNavigate = useCallback((view: View) => {
+    setCurrentView(view);
+    setMobileMenuOpen(false);
+  }, []);
+
+  // Close mobile menu when clicking overlay
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface-950 text-zinc-100">
-
-      {/* ── Left Sidebar ── */}
-      <Sidebar
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed((v) => !v)}
-        currentSessionId={sessionId}
-        onNewChat={handleNewChat}
-        onSelectSession={handleSelectSession}
-      />
-
-      {/* ── Main content column ── */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-
-        {/* Header */}
-        <Header
-          sessionId={sessionId}
-          onClear={clearChat}
-          onOpenTimeMachine={() => setIsTimeMachineOpen(true)}
-          onOpenStandup={() => setIsStandupOpen(true)}
-          onOpenMacros={() => setIsMacrosOpen(true)}
-          sidebarCollapsed={sidebarCollapsed}
-          onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
-          isConnected={isConnected}
+    <div className="flex h-screen overflow-hidden bg-dark-bg text-dark-text">
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block">
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((v) => !v)}
+          currentSessionId={sessionId}
+          currentView={currentView}
+          onNewChat={handleNewChat}
+          onSelectSession={handleSelectSession}
+          onNavigate={handleNavigate}
         />
-
-        {/* Body: chat + Screen Copilot panel */}
-        <div className="flex flex-1 overflow-hidden">
-
-          {/* Chat column */}
-          <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-            <ChatWindow messages={messages} loading={loading} />
-
-            {/* API error banner */}
-            {error && (
-              <div className="mx-4 mb-2 px-4 py-2.5 rounded-xl bg-red-950/40 border border-red-800/50 text-red-300 text-xs flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
-                <span className="flex-1">{error}</span>
-                <span className="text-red-600 hidden sm:inline">
-                  Is uvicorn running on port 8000?
-                </span>
-              </div>
-            )}
-
-            <InputBar onSend={sendMessage} disabled={loading} />
-          </div>
-
-          {/* Right Screen Copilot panel */}
-          <aside className="hidden lg:flex flex-col w-84 xl:w-96 border-l border-surface-700 bg-surface-900/40 overflow-y-auto flex-shrink-0">
-            <div className="p-4 space-y-4">
-              <ScreenCopilotPanel />
-
-              {/* Copilot Overview Guide */}
-              <div className="rounded-xl border border-surface-700/60 bg-surface-800/30 p-4 space-y-2.5">
-                <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">
-                  Screen Copilot Guide
-                </p>
-                {[
-                  ["Instant Vision", "Inspects your full primary monitor in real-time"],
-                  ["Terminal Bugs", "Reads compiler logs and shell errors automatically"],
-                  ["IDE Code Fix", "Identifies syntax bugs and provides working code"],
-                  ["Zero Copy-Paste", "No need to transcribe or screenshot manually"],
-                ].map(([label, desc]) => (
-                  <div key={label} className="flex gap-2.5">
-                    <span className="text-[11px] font-semibold text-zinc-400 w-24 flex-shrink-0">{label}</span>
-                    <span className="text-[11px] text-zinc-500 leading-snug">{desc}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </aside>
-
-        </div>
       </div>
 
-      {/* Visual Time Machine modal */}
-      <VisualTimeMachine
-        isOpen={isTimeMachineOpen}
-        onClose={() => setIsTimeMachineOpen(false)}
-      />
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 w-64 bg-dark-surface z-50 md:hidden">
+            <div className="absolute top-3 right-3">
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
+                aria-label="Close menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <Sidebar
+              collapsed={false}
+              onToggle={() => setMobileMenuOpen(false)}
+              currentSessionId={sessionId}
+              currentView={currentView}
+              onNewChat={handleNewChat}
+              onSelectSession={handleSelectSession}
+              onNavigate={handleNavigate}
+            />
+          </div>
+        </>
+      )}
 
-      {/* Daily Standup Report modal */}
-      <StandupModal
-        isOpen={isStandupOpen}
-        onClose={() => setIsStandupOpen(false)}
-      />
+      {/* Main Column */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        {/* Header */}
+        <Header
+          sidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={() => {
+            if (window.innerWidth < 768) {
+              setMobileMenuOpen((v) => !v);
+            } else {
+              setSidebarCollapsed((v) => !v);
+            }
+          }}
+          title={currentView === "chat" ? conversationTitle : undefined}
+        />
 
-      {/* Autonomous Workflow Macro Recorder modal */}
-      <MacroRecorderModal
-        isOpen={isMacrosOpen}
-        onClose={() => setIsMacrosOpen(false)}
-      />
+        {/* View Router */}
+        {currentView === "chat" && (
+          <>
+            <ChatWindow messages={messages} loading={loading} />
+            {error && (
+              <div className="mx-4 mb-2 px-4 py-2 rounded-lg bg-dark-surface border border-dark-border text-dark-muted text-xs">
+                {error}
+              </div>
+            )}
+            <InputBar onSend={sendMessage} disabled={loading} />
+          </>
+        )}
+
+        {currentView === "copilot" && <ScreenCopilotView />}
+        {currentView === "timemachine" && <TimeMachineView />}
+        {currentView === "standup" && <StandupView />}
+        {currentView === "macros" && <MacrosView />}
+      </div>
     </div>
   );
 }
