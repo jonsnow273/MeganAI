@@ -43,7 +43,7 @@ export function ChatWindow({ messages, loading }: Props) {
               How can I help you today?
             </h2>
             <p className="text-sm text-dark-muted max-w-md">
-              I'm Megan, your local AI assistant. I run entirely on your machine with controllable behavior.
+              I'm Megan, your intelligent desktop AI assistant. Powered by a high-throughput cloud gateway with full desktop automation.
             </p>
           </div>
         )}

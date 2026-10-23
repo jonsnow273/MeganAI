@@ -1,54 +1,44 @@
-# 🗺️ Megan Project Roadmap: Controllable Local AI
+# Megan Project Roadmap
 
-This document details development milestones, research objectives, and implementation phases for the Megan project.
-
----
-
-## 🔬 Core Research Track: Activation Steering & Internal Control (Priority)
-- [x] Theoretical formulation & contrastive extraction methodology (`docs/activation_steering.md`)
-- [x] Side-by-side comparison benchmarks & evaluation protocol (`docs/experiments.md`)
-- [ ] TransformerLens forward hook injection engine (`steering/hook_manager.py`)
-- [ ] Automated steering vector extractor from contrastive prompt pairs (`steering/direction_finder.py`)
-- [ ] Pre-calibrated vector registry (`cautious`, `concise`, `detailed`, `creative`, `neutral`)
-- [ ] Side-by-side steered vs. unsteered evaluation API (`/api/steering/compare`)
-- [ ] Interactive React Steering Dashboard with Recharts layer heatmaps & dynamic sliders
+This document details development milestones, system objectives, and implementation phases for the Megan AI assistant project.
 
 ---
 
-## 🎯 Phase 1: Foundation & High-Performance API Bridge
-- [x] Architectural design prioritizing internal model interventions
+## Phase 1: Foundation and High-Performance Gateway Bridge (Completed)
+- [x] Architectural design prioritizing desktop copilot workflows
 - [x] Centralized configuration system (`configs/*.yaml` and `.env`)
-- [x] FastAPI REST & WebSocket streaming architecture (`/ws/chat`, `/ws/voice`)
-- [x] React 18 + Vite + Tailwind CSS dashboard scaffold
-- [ ] Local quantized model loader (Mistral 7B / Gemma 2B via `bitsandbytes` 4-bit)
-- [ ] High-throughput inference pipeline preserving internal tensor hook access
+- [x] FastAPI REST and WebSocket streaming architecture (`/ws/chat`, `/api/chat/message`)
+- [x] React 18, Vite, and Tailwind CSS dashboard scaffold
+- [x] Cloud OpenAI-compatible LLM gateway client with multimodal vision support
+- [x] Reasoning tag parser for thinking models (`<think>` tags extraction)
 
 ---
 
-## 🛡️ Phase 2: Safe PC Automation Agent
-- [x] Whitelist registry and parameter validation specification (`docs/automation_whitelist.md`)
-- [ ] Intent classifier separating casual conversation from desktop automation commands
-- [ ] Handlers implementation:
-  - File/directory management with `send2trash` Recycle Bin protection
-  - Application launcher & file search
-  - Code synthesizer targeting VS Code
-- [ ] Human-in-the-loop confirmation modal (UI + CLI) for destructive operations
-- [ ] Operational caution steering integration (evaluating how `cautious` vectors reduce automation errors)
+## Phase 2: Safe Desktop Automation and Smart Workspace (Completed)
+- [x] Whitelist registry and parameter validation specification (`configs/automation_whitelist.yaml`)
+- [x] Safe file and directory handlers with `send2trash` Recycle Bin protection
+- [x] Application launcher and URL navigation
+- [x] Two-tier AI File Organizer with duplicate suppression via SHA-256 and multi-step undo
+- [x] Automated Daily Standup report synthesis (Git commits, focus tracker, screen memory)
+- [x] Workflow Macro recorder and replay engine
+- [x] PBKDF2 user authentication and per-user directory sandboxes
 
 ---
 
-## 🎙️ Phase 3: Multilingual Voice Interaction
-- [x] Microphone streaming & language configuration specs (`docs/voice_setup.md`, `docs/multilingual_support.md`)
-- [ ] Background openWakeWord listener targeting "Hey Megan"
-- [ ] Local OpenAI Whisper integration (`medium` / `large-v3`)
-- [ ] Dynamic language routing across 6 primary languages
-- [ ] Low-latency audio ingestion WebSocket
+## Phase 3: Multimodal Vision and Screen Copilot (In Progress)
+- [x] Native Win32 screen capture via GDI (<15ms grab time)
+- [x] High-resolution image compression and base64 transmission pipeline
+- [x] Screen Copilot diagnosis endpoint with structured fix recommendations
+- [x] Digital Memory background observer with pixel diffing and OCR extraction
+- [x] Interactive Visual Time Machine scrubbing interface
+- [ ] Multi-monitor display selection for Screen Copilot
+- [ ] Active window region bounding box selector
 
 ---
 
-## 🎨 Phase 4: Integrated System Polishing & Evaluation
-- [ ] Complete React dashboard integration uniting Chat, Steering Lab, and Automation Logs
-- [ ] Empirical validation of steering stability across 50 benchmark test prompts
-- [ ] Perplexity stability analysis (monitoring ΔPPL across steering magnitudes)
-- [ ] Windows system tray daemon (`pystray`) for unobtrusive background monitoring
-- [ ] End-to-end automated test suite and reproducibility report
+## Phase 4: Voice Pipeline and System Tray Daemon
+- [x] Microphone streaming and language configuration specs (`configs/languages.yaml`)
+- [ ] Background wake word detection targeting "Hey Megan"
+- [ ] Fast speech-to-text integration with automatic language routing
+- [ ] Windows system tray daemon for background monitoring and quick hotkeys
+- [ ] End-to-end automated regression testing suite

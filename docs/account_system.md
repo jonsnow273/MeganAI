@@ -1,11 +1,11 @@
-# 🔐 Local Account & User Isolation System
+# Local Account and User Isolation System
 
 ## Overview
 Megan provides a local-first, privacy-preserving user authentication and data isolation system. All credentials, session tokens, and personal artifacts reside exclusively on the user's physical machine without any external telemetry or cloud identity providers.
 
 ---
 
-## 🗄️ Architecture & Storage Layout
+## Architecture and Storage Layout
 
 ### 1. Database Schema (`data/users.db`)
 User records are persisted in an embedded SQLite database (`users.db`) created under `DATA_DIR`:
@@ -33,11 +33,11 @@ CREATE TABLE IF NOT EXISTS users (
 - **Format**: Signed URL-safe Base64 tokens: `<payload_b64>.<sig_b64>`
 - **Signing**: HMAC-SHA256 signed with a persistent 256-bit machine secret key (`data/auth_secret.key`).
 - **Validity**: 7 days default lifetime (`exp`).
-- **Stateless & Fast**: Validated in-memory with constant-time HMAC check without requiring external JWT dependencies.
+- **Stateless and Fast**: Validated in-memory with constant-time HMAC check without requiring external JWT dependencies.
 
 ---
 
-## 📂 Per-User Directory Isolation
+## Per-User Directory Isolation
 
 When a user is created, Megan automatically generates isolated workspaces under `data/users/<username>/`:
 
@@ -46,9 +46,9 @@ data/
 └── users/
     ├── alice/
     │   ├── memory/         # Digital Memory: screenshots, OCR text, vector store
-    │   ├── organizer/      # File Organizer: user-specific audit logs & rules
-    │   ├── conversations/  # Chat history & multi-turn state
-    │   └── settings/       # Custom steering presets & user preferences
+    │   ├── organizer/      # File Organizer: user-specific audit logs and rules
+    │   ├── conversations/  # Chat history and multi-turn state
+    │   └── settings/       # Per-user custom settings overrides
     └── bob/
         ├── memory/
         ├── organizer/
@@ -56,30 +56,12 @@ data/
         └── settings/
 ```
 
-This guarantees that multiple users sharing the same computer have completely private memory databases and files.
+- **Path Sandboxing**: Path traversal attempts (e.g. `../../admin`) are rejected before disk evaluation.
+- **Data Privacy**: Users cannot read, search, or index another user's screen memories or audit logs.
 
 ---
 
-## 🌐 API Endpoints (`/api/auth`)
-
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `POST` | `/api/auth/register` | Register new account and initialize user workspace | No |
-| `POST` | `/api/auth/login` | Authenticate with credentials and receive Bearer token | No |
-| `GET`  | `/api/auth/me` | Fetch active user profile | Yes (Bearer) |
-| `POST` | `/api/auth/logout` | Confirm session logout | Yes (Bearer) |
-| `GET`  | `/api/auth/status` | Check authentication status | Optional |
-
-### Usage with Authorization Header
-Protected API endpoints accept the token in the HTTP `Authorization` header:
-```http
-GET /api/auth/me HTTP/1.1
-Authorization: Bearer <your_session_token>
-```
-
----
-
-## 💻 Terminal CLI Commands
+## CLI Usage
 
 ```bash
 # Register a new local account
@@ -87,4 +69,19 @@ python main.py --register
 
 # List registered local accounts
 python main.py --list-users
+
+# Display current active session and gateway status
+python main.py --info
 ```
+
+---
+
+## REST API Endpoints (`/api/auth`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/auth/register` | Register a new username and password |
+| `POST` | `/api/auth/login` | Authenticate and obtain a signed session token |
+| `GET`  | `/api/auth/me` | Fetch active user profile from session token |
+| `POST` | `/api/auth/logout` | Invalidate current session on the client |
+| `GET`  | `/api/auth/users` | List registered accounts (usernames only) |
