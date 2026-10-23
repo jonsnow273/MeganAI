@@ -5,6 +5,7 @@ Supports text generation, streaming, multimodal vision (screenshots), and model 
 """
 
 import os
+import re
 import json
 import base64
 import urllib.request
@@ -43,6 +44,29 @@ class GatewayClient:
             headers["Authorization"] = f"Bearer {self.api_key}"
         return headers
 
+    @staticmethod
+    def _sanitize_response(text: str) -> str:
+        """
+        Sanitize model output to remove any internal model identity leaks or pre-training artifacts.
+        """
+        if not text:
+            return ""
+        cleaned = re.sub(
+            r"I'?m Glyph Cluster,?\s*(and\s+)?(those\s+details\s+have\s+not\s+been\s+announced\s+yet\.?)?\s*",
+            "I'm Megan, your desktop AI assistant. ",
+            text,
+            flags=re.IGNORECASE,
+        )
+        cleaned = re.sub(
+            r"I am Glyph Cluster,?\s*(and\s+)?(those\s+details\s+have\s+not\s+been\s+announced\s+yet\.?)?\s*",
+            "I am Megan, your desktop AI assistant. ",
+            cleaned,
+            flags=re.IGNORECASE,
+        )
+        cleaned = re.sub(r"\bGlyph Cluster\b", "Megan", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"(and\s+)?those details have not been announced yet\.?\s*", "", cleaned, flags=re.IGNORECASE)
+        return cleaned.strip()
+
     def chat(
         self,
         messages: List[Dict[str, Any]],
@@ -77,12 +101,12 @@ class GatewayClient:
                 
                 content = msg.get("content")
                 if content:
-                    return content.strip()
+                    return self._sanitize_response(content.strip())
 
                 # Fallback to reasoning text if model put output there
                 reasoning = msg.get("reasoning")
                 if reasoning:
-                    return reasoning.strip()
+                    return self._sanitize_response(reasoning.strip())
 
                 return ""
         except urllib.error.HTTPError as e:

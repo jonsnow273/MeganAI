@@ -65,6 +65,9 @@ async def send_message(req: ChatMessageRequest):
         from llm import engine as default_engine
         response_text = default_engine.generate(messages)
 
+    from llm.gateway_client import GatewayClient
+    response_text = GatewayClient._sanitize_response(response_text)
+
     history.add("assistant", response_text)
     logger.info(f"[{history.session_id}] User: {req.message[:50]}... -> {len(response_text)} chars")
 
