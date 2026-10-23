@@ -5,7 +5,7 @@ build-backend = "setuptools.backends.legacy:build"
 [project]
 name = "megan"
 version = "0.1.0"
-description = "The first local AI assistant with controllable internal behavior via activation steering"
+description = "Extensible desktop AI intelligence system powered by high-throughput cloud gateway and local OS automation"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -13,13 +13,12 @@ authors = [
     {name = "Megan Research Team", email = "team@megan-ai.local"}
 ]
 keywords = [
-    "activation-steering",
-    "mechanistic-interpretability",
-    "transformer-lens",
-    "local-llm",
+    "desktop-assistant",
     "ai-assistant",
     "pc-automation",
-    "representation-engineering"
+    "screen-copilot",
+    "visual-memory",
+    "multimodal-ai"
 ]
 
 [project.scripts]

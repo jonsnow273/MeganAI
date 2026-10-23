@@ -22,6 +22,13 @@ function TypingIndicator() {
 export function ChatWindow({ messages, loading }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // Hide the empty assistant placeholder while the first token is in flight.
+  const visibleMessages = messages.filter(
+    (msg) => !(msg.role === "assistant" && msg.content === "")
+  );
+  const showTyping =
+    loading && (messages.length === 0 || messages[messages.length - 1].content === "");
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -36,18 +43,18 @@ export function ChatWindow({ messages, loading }: Props) {
               How can I help you today?
             </h2>
             <p className="text-sm text-dark-muted max-w-md">
-              I'm Megan, your local AI assistant. I run entirely on your machine with controllable behavior.
+              I'm Megan, your intelligent desktop AI assistant. Powered by a high-throughput cloud gateway with full desktop automation.
             </p>
           </div>
         )}
 
         {/* Messages */}
-        {messages.map((msg) => (
+        {visibleMessages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />
         ))}
 
         {/* Typing indicator */}
-        {loading && <TypingIndicator />}
+        {showTyping && <TypingIndicator />}
 
         <div ref={bottomRef} />
       </div>

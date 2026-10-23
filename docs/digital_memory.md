@@ -1,13 +1,13 @@
-# 🧠 Megan Digital Memory
+# Megan Digital Memory
 
 ## Overview
 Megan Digital Memory is a privacy-first, on-device visual memory engine. It periodically snapshots what the user sees on their screen, extracts text via Tesseract OCR, indexes the visual semantics into ChromaDB using dense vector embeddings, and allows natural-language recall ("Where did I see that receipt?", "What was that terminal command?").
 
-All captures and embeddings are processed 100% locally on the device with zero cloud dependencies.
+Screen captures, OCR processing, and vector indexing run locally on the device with zero third-party data retention. Natural-language retrieval queries can be answered directly or synthesized with the assistance of the cloud LLM gateway.
 
 ---
 
-## 🏗️ Architecture & Pipeline
+## Architecture and Pipeline
 
 ```
 [ Screen ] 
@@ -33,17 +33,17 @@ All captures and embeddings are processed 100% locally on the device with zero c
 
 ---
 
-## 🛡️ Privacy & Blacklist Rules (`configs/memory_privacy.yaml`)
+## Privacy and Blacklist Rules (`configs/memory_privacy.yaml`)
 
 Digital Memory incorporates strict foreground window and process detection:
 
 - **Personal Chat Applications**: `WhatsApp`, `Telegram`, `Signal`, `Discord`, `Slack`, `Skype` are automatically blocked whenever focused.
 - **Sensitive Windows**: Windows containing titles like `Incognito`, `InPrivate`, `Bitwarden`, `1Password`, `Bank`, `Checkout`, `Credit Card` are dropped immediately in RAM and never written to disk.
-- **Master Switch & Temporary Pause**: Memory capture is off by default and can be paused with one click or API call (`POST /api/memory/pause`).
+- **Master Switch and Temporary Pause**: Memory capture is off by default and can be paused with one click or API call (`POST /api/memory/pause`).
 
 ---
 
-## 📂 Per-User Workspace Storage Layout
+## Per-User Workspace Storage Layout
 
 ```
 data/
@@ -59,11 +59,11 @@ data/
 
 ### Auto-Retention Policy
 - **Screenshots (Images)**: Automatically pruned after 30 days (configurable in `memory_privacy.yaml`).
-- **OCR Text & Embeddings**: Kept permanently (taking up <20 MB per month). You can always search past work history even after raw images are cleaned up.
+- **OCR Text and Embeddings**: Kept permanently (taking up <20 MB per month). You can always search past work history even after raw images are cleaned up.
 
 ---
 
-## 💻 CLI Commands
+## CLI Commands
 
 ```bash
 # Capture the current screen immediately and index it
@@ -78,7 +78,7 @@ python main.py --memory-start
 
 ---
 
-## 🌐 REST API Endpoints (`/api/memory`)
+## REST API Endpoints (`/api/memory`)
 
 | Method | Endpoint | Description |
 |---|---|---|

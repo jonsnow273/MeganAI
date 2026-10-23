@@ -1,10 +1,10 @@
-# 🌍 Multilingual Voice & Chat Support
+# Multilingual Voice and Chat Support
 
-Megan is designed to communicate and understand commands in **multiple languages** without requiring cloud translation services.
+Megan is designed to communicate and understand commands in multiple languages without requiring external translation layers.
 
 ---
 
-## 🌐 Supported Languages
+## Supported Languages
 
 Megan provides 6 primary language slots configured in `configs/languages.yaml`:
 
@@ -21,7 +21,7 @@ Megan provides 6 primary language slots configured in `configs/languages.yaml`:
 
 ---
 
-## 🔄 Language Processing Flow
+## Language Processing Flow
 
 1. **Spoken Input**: The user speaks in any enabled language.
 2. **Automatic Language Detection**: Whisper detects the language probability distribution during the initial audio chunk.
@@ -31,7 +31,7 @@ Megan provides 6 primary language slots configured in `configs/languages.yaml`:
 
 ---
 
-## ⚙️ Enabling / Disabling Languages
+## Enabling and Disabling Languages
 
 Edit `configs/languages.yaml`:
 ```yaml

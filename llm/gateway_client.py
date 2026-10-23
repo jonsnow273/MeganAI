@@ -97,6 +97,117 @@ class GatewayClient:
             logger.error(f"Gateway connection error: {e}")
             raise RuntimeError(f"Failed to communicate with LLM gateway: {e}") from e
 
+    def chat_stream(
+        self,
+        messages: List[Dict[str, Any]],
+        model: Optional[str] = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+    ) -> Generator[str, None, None]:
+        """
+        Stream a chat completion, yielding content deltas as they arrive.
+
+        Parses OpenAI-compatible Server-Sent Events. Falls back to a single
+        non-streaming request when the gateway rejects streaming or when the
+        connection fails before any token was produced.
+        """
+        target_model = model or self.default_model
+        endpoint = f"{self.base_url}/chat/completions"
+
+        payload = {
+            "model": target_model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+            "stream": True,
+        }
+
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(endpoint, data=data, headers=self._get_headers())
+
+        yielded_any = False
+        reasoning_parts: List[str] = []
+
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                for raw_line in response:
+                    line = raw_line.decode("utf-8", errors="replace").strip()
+                    if not line or not line.startswith("data:"):
+                        continue
+
+                    event_data = line[len("data:"):].strip()
+                    if not event_data:
+                        continue
+                    if event_data == "[DONE]":
+                        break
+
+                    try:
+                        event = json.loads(event_data)
+                    except json.JSONDecodeError:
+                        continue
+
+                    if event.get("error"):
+                        error = event["error"]
+                        detail = error.get("message") if isinstance(error, dict) else str(error)
+                        raise RuntimeError(f"Gateway stream error: {detail}")
+
+                    choices = event.get("choices") or []
+                    if not choices:
+                        continue
+
+                    delta = choices[0].get("delta") or {}
+                    content = delta.get("content")
+                    if content:
+                        yielded_any = True
+                        yield content
+                        continue
+
+                    reasoning = delta.get("reasoning") or delta.get("reasoning_content")
+                    if reasoning:
+                        reasoning_parts.append(reasoning)
+
+        except urllib.error.HTTPError as e:
+            err_body = ""
+            try:
+                err_body = e.read().decode("utf-8")
+            except Exception:
+                pass
+            logger.warning(f"Gateway streaming error {e.code}: {e.reason} | {err_body}")
+            if yielded_any:
+                raise RuntimeError(f"Streaming interrupted: {e.reason}") from e
+            yield from self._fallback_stream(messages, target_model, max_tokens, temperature)
+            return
+        except RuntimeError:
+            raise
+        except Exception as e:
+            logger.warning(f"Gateway streaming connection error: {e}")
+            if yielded_any:
+                raise RuntimeError(f"Streaming interrupted: {e}") from e
+            yield from self._fallback_stream(messages, target_model, max_tokens, temperature)
+            return
+
+        if not yielded_any and reasoning_parts:
+            yield "".join(reasoning_parts)
+
+    def _fallback_stream(
+        self,
+        messages: List[Dict[str, Any]],
+        model: str,
+        max_tokens: int,
+        temperature: float,
+    ) -> Generator[str, None, None]:
+        """Yield a non-streaming completion as a single chunk."""
+        text = self.chat(
+            messages=messages,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+        if text:
+            yield text
+
     def chat_with_vision(
         self,
         prompt: str,
