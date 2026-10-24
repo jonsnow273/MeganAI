@@ -1,16 +1,16 @@
-# 📂 AI-Powered Local File Organizer
+# AI-Powered File Organizer
 
 ## Overview
-The Megan File Organizer is an intelligent, privacy-first file taxonomy system. It monitors target directories (such as Downloads, Desktop, Documents) in real-time, categorizes incoming and existing files using extension-based deterministic rules, falls back to a local LLM for ambiguous or unknown extensions, avoids duplicates using SHA-256 hashing, and maintains an undoable JSON audit log.
+The Megan File Organizer is an intelligent file taxonomy system. It monitors target directories (such as Downloads, Desktop, Documents) in real-time, categorizes incoming and existing files using extension-based deterministic rules, falls back to the cloud LLM Gateway for ambiguous or unknown extensions, avoids duplicates using SHA-256 hashing, and maintains an undoable JSON audit log.
 
 ---
 
-## 🏗️ Core Subsystems
+## Core Subsystems
 
 | Module | File | Purpose |
 |---|---|---|
 | **Rules Engine** | `organizer/rules.py` | Taxonomy mapping, file extensions, and blacklist definitions |
-| **Classifier** | `organizer/classifier.py` | Two-tier classification: Fast deterministic match + Local LLM fallback |
+| **Classifier** | `organizer/classifier.py` | Two-tier classification: Fast deterministic match + LLM Gateway fallback |
 | **Safe Mover** | `organizer/mover.py` | Conflict resolution, duplicate suppression via SHA-256, atomic moves |
 | **Audit Log** | `organizer/audit.py` | JSON move history and multi-step undo engine |
 | **Folder Watcher** | `organizer/watcher.py` | Real-time filesystem observer using `watchdog` with debounce |
@@ -18,7 +18,7 @@ The Megan File Organizer is an intelligent, privacy-first file taxonomy system. 
 
 ---
 
-## 🗂️ Default Taxonomy
+## Default Taxonomy
 
 ```
 Organized/
@@ -34,7 +34,7 @@ Organized/
 
 ---
 
-## 💻 CLI Usage
+## CLI Usage
 
 ```bash
 # Preview what would be organized without moving anything
@@ -49,7 +49,7 @@ python main.py --watch
 
 ---
 
-## 🌐 REST API Endpoints (`/api/organizer`)
+## REST API Endpoints (`/api/organizer`)
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -58,4 +58,3 @@ python main.py --watch
 | `POST` | `/api/organizer/start` | Start the real-time folder watcher |
 | `POST` | `/api/organizer/stop` | Stop the folder watcher |
 | `POST` | `/api/organizer/undo` | Undo recent file moves |
-| `GET`  | `/api/organizer/audit` | Retrieve recent move audit history |

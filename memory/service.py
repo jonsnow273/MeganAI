@@ -189,6 +189,21 @@ class DigitalMemoryService:
         """Query past digital memory items."""
         return self.store.search(query=query, top_k=top_k)
 
+    def get_timeline(
+        self,
+        limit: int = 100,
+        order: str = "asc",
+        app_filter: Optional[str] = None,
+        query: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Retrieve ordered memory snapshots for the Visual Time Machine slider."""
+        return self.store.get_timeline(
+            limit=limit,
+            order=order,
+            app_filter=app_filter,
+            query=query,
+        )
+
     def status(self) -> Dict[str, Any]:
         """Telemetry status for dashboard and health checks."""
         return {

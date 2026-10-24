@@ -1,37 +1,57 @@
+import typography from '@tailwindcss/typography'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Megan brand palette - dark purple/violet theme
-        megan: {
-          50:  '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
-          900: '#4c1d95',
-          950: '#2e1065',
+        // Carbon Matte & Sunset Coral Theme
+        carbon: {
+          bg: '#09090b',
+          sidebar: '#0d0d10',
+          card: '#121216',
+          surface: '#18181c',
+          hover: '#222227',
+          border: '#27272d',
+          borderLight: '#35353c',
+          text: '#f4f4f6',
+          muted: '#a1a1aa',
+          subtle: '#71717a',
+        },
+        coral: {
+          300: '#fda4af',
+          400: '#fb7185',
+          500: '#f43f5e',
+          600: '#e11d48',
+          700: '#be123c',
+        },
+        // Backwards-compatible mappings for dark
+        dark: {
+          bg: '#09090b',
+          surface: '#121216',
+          border: '#27272d',
+          hover: '#1c1c22',
+          text: '#f4f4f6',
+          muted: '#a1a1aa',
+          subtle: '#71717a',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
-      animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'typing': 'typing 1.5s steps(3, end) infinite',
+      maxWidth: {
+        'chat': '780px',
+      },
+      boxShadow: {
+        'coral-glow': '0 0 25px -4px rgba(244, 63, 94, 0.25)',
+        'coral-glow-sm': '0 0 15px -2px rgba(244, 63, 94, 0.20)',
+        'carbon-card': '0 4px 20px -2px rgba(0, 0, 0, 0.45)',
       },
     },
   },
-  plugins: [],
+  plugins: [typography],
 }

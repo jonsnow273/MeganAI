@@ -1,5 +1,5 @@
 """
-Megan — The first local AI assistant with controllable internal behavior.
+Megan — Privacy-First AI Desktop Assistant with Multimodal Screen Copilot.
 Main application entry point and interactive CLI loop.
 """
 
@@ -18,7 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from core import config, logger, AVAILABLE_STEERING_PRESETS
+from core import config, logger
 
 BANNER = r"""
   __  __ ______ _____          _   _ 
@@ -28,7 +28,7 @@ BANNER = r"""
  | |  | | |___| |__| |/ ____ \| |\  |
  |_|  |_|______\_____/_/    \_\_| \_|
 ======================================================
- The First Local AI Assistant with Controllable Behavior
+ Megan: AI Desktop Assistant & Multimodal Screen Copilot
 ======================================================
 """
 
@@ -38,63 +38,23 @@ def print_system_info():
     print(f"Assistant Name     : {config.assistant_name}")
     print(f"Primary Model      : {config.model_name}")
     print(f"Alternate Model    : {config.alternate_model_name}")
-    print(f"Target Device      : {config.device}")
-    print(f"Quantization       : {config.quantization}")
-    print(f"Steering Enabled   : {config.steering_enabled}")
-    print(f"Available Presets  : {', '.join(AVAILABLE_STEERING_PRESETS)}")
-    print(f"Default Preset     : {config.default_steering_preset} (alpha = {config.default_steering_strength})")
+    print(f"Inference Mode     : Cloud LLM Gateway")
+    print(f"Screen Copilot     : Ready (Multimodal Vision)")
     print(f"PC Automation Safe : {config.safe_delete} (Confirmations: {config.confirmation_required})")
     print("=" * 54)
 
-def check_dependencies() -> bool:
-    """Check if ML dependencies (torch, transformers) are installed."""
-    try:
-        import torch
-        import transformers
-        return True
-    except ImportError as e:
-        logger.warning(
-            f"Missing required ML runtime: {e}. "
-            "To run local model inference and activation steering, please install dependencies: "
-            "pip install -r requirements.txt"
-        )
-        return False
-
-def run_interactive_cli(preset_name: str = "neutral", alpha: float = 1.5, model_name: str = None):
+def run_interactive_cli():
     """Run the interactive terminal chat loop."""
     print(BANNER)
-    print("Initializing Megan Cognitive Core...")
+    print("Initializing Megan Assistant Core...")
 
-    if not check_dependencies():
-        print()
-        print("[Notice] PyTorch or Transformers is not yet installed in this environment.")
-        print("Run 'pip install -r requirements.txt' to enable local inference.")
-        print("Core architecture, configs, and steering registry are validated and ready.")
-        print()
-        return
-
-    from llm import loader, engine
-    from steering import SteeringEngine
-
-    target_model = model_name or config.model_name
-    print(f"Loading local weights ({target_model}) on {config.device}...")
-    loader.load(model_name=target_model)
-
-    # Initialize Steering Engine
-    steering = SteeringEngine(loader.model, loader.tokenizer_wrapper, engine)
-
-    # Apply initial preset if specified
-    if preset_name != "neutral":
-        steering.set_preset(preset_name, alpha)
+    from llm import engine
 
     print()
     print("=" * 54)
     print("Megan is online! Commands:")
-    print("  /steer <preset> [strength] - Change behavioral direction")
-    print("  /reset                     - Reset to neutral (unsteered)")
-    print("  /compare <prompt>          - Side-by-side steered vs unsteered")
-    print("  /status                    - View active steering telemetry")
-    print("  /quit                      - Exit")
+    print("  /clear - Clear conversation history")
+    print("  /quit  - Exit")
     print("=" * 54)
     print()
 
@@ -102,9 +62,7 @@ def run_interactive_cli(preset_name: str = "neutral", alpha: float = 1.5, model_
 
     while True:
         try:
-            status = steering.status
-            active_info = f"[{status['active_preset']}:{status['active_alpha']}x]"
-            user_input = input(f"You {active_info}> ").strip()
+            user_input = input("You> ").strip()
 
             if not user_input:
                 continue
@@ -113,91 +71,21 @@ def run_interactive_cli(preset_name: str = "neutral", alpha: float = 1.5, model_
                 print("Shutting down Megan. Goodbye!")
                 break
 
-            elif user_input.startswith("/steer"):
-                parts = user_input.split()
-                if len(parts) < 2:
-                    print(f"Usage: /steer <preset> [strength] [optional question]. Presets: {', '.join(AVAILABLE_STEERING_PRESETS)}")
-                    continue
-                p_name = parts[1].lower()
-                p_alpha = None
-                prompt_start_idx = 2
-
-                if len(parts) > 2:
-                    try:
-                        p_alpha = float(parts[2])
-                        prompt_start_idx = 3
-                    except ValueError:
-                        # User typed a question right after preset without numeric strength
-                        prompt_start_idx = 2
-
-                success = steering.set_preset(p_name, p_alpha)
-                if success:
-                    print(f"-> Steering set to '{p_name}' (alpha = {steering.status['active_alpha']})")
-                else:
-                    print(f"-> Preset '{p_name}' could not be activated. Available: {', '.join(AVAILABLE_STEERING_PRESETS)}")
-                    continue
-
-                # If the user also included a question in the same line, answer it immediately!
-                extra_prompt = " ".join(parts[prompt_start_idx:]).strip()
-                if extra_prompt:
-                    messages.append({"role": "user", "content": extra_prompt})
-                    print(f"\nYou [{p_name}:{steering.status['active_alpha']}x]> {extra_prompt}")
-                    print("\nInes: ", end="", flush=True)
-                    response = steering.generate_steered(messages)
-                    print(response + "\n")
-                    messages.append({"role": "assistant", "content": response})
-
-                continue
-
-            elif user_input == "/reset":
-                steering.reset()
-                print("-> Steering reset to neutral baseline.")
-                continue
-
-            elif user_input == "/status":
-                st = steering.status
-                print(f"Active Preset : {st['active_preset']}")
-                print(f"Active Alpha  : {st['active_alpha']}")
-                print(f"Hook Active   : {st['hook_active']}")
-                print(f"Target Layer  : {st['active_layer']}")
-                print(f"Cached Vectors: {st['cached_directions']}")
-                continue
-
-            elif user_input.startswith("/compare"):
-                prompt_to_compare = user_input[8:].strip()
-                if not prompt_to_compare:
-                    print("Usage: /compare <your question/prompt>")
-                    continue
-                compare_preset = steering.status["active_preset"]
-                if compare_preset == "neutral":
-                    compare_preset = "concise"
-                print()
-                print(f"Running dual forward pass (Baseline vs '{compare_preset}')...")
-                print()
-                res = steering.compare(
-                    [{"role": "user", "content": prompt_to_compare}],
-                    preset_name=compare_preset,
-                )
-                print(f"--- [1] Baseline (Unsteered) [{res['metrics']['unsteered_tokens']} tokens, {res['metrics']['unsteered_latency_ms']}ms] ---")
-                print(res["unsteered"])
-                print()
-                print(f"--- [2] Steered: {compare_preset} [{res['metrics']['steered_tokens']} tokens ({res['metrics']['token_delta_percentage']}%), {res['metrics']['steered_latency_ms']}ms] ---")
-                print(res["steered"])
-                print("-" * 54)
-                print()
+            if user_input.lower() == "/clear":
+                messages = []
+                print("[Chat history cleared.]")
                 continue
 
             messages.append({"role": "user", "content": user_input})
             print()
             print("Megan: ", end="", flush=True)
-            response = steering.generate_steered(messages)
+            response = engine.generate(messages)
             print(response)
             print()
             messages.append({"role": "assistant", "content": response})
 
         except KeyboardInterrupt:
-            print()
-            print("Session interrupted. Exiting...")
+            print("\nSession interrupted. Exiting...")
             break
         except Exception as e:
             logger.error(f"Error during execution: {e}")
@@ -205,13 +93,9 @@ def run_interactive_cli(preset_name: str = "neutral", alpha: float = 1.5, model_
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Megan — The First Local AI Assistant with Controllable Internal Behavior."
+        description="Megan — Privacy-First AI Desktop Assistant with Multimodal Screen Copilot."
     )
     parser.add_argument("--info", action="store_true", help="Print system configuration and exit")
-    parser.add_argument("--model", type=str, default=None, help="Target model to load (Mistral or Gemma)")
-    parser.add_argument("--steer", type=str, default="neutral", choices=AVAILABLE_STEERING_PRESETS,
-                        help="Initial steering preset (default: neutral)")
-    parser.add_argument("--strength", type=float, default=1.5, help="Initial steering strength alpha")
     parser.add_argument("--organize", action="store_true", help="Scan and organize files in watched folders")
     parser.add_argument("--dry-run", action="store_true", help="Simulate organization without moving files")
     parser.add_argument("--watch", action="store_true", help="Start background folder watcher daemon")
@@ -220,8 +104,13 @@ def main():
     parser.add_argument("--memory-start", action="store_true", help="Start the Digital Memory screen capture daemon")
     parser.add_argument("--memory-capture", action="store_true", help="Capture and index the screen immediately")
     parser.add_argument("--memory-search", type=str, default=None, help="Search indexed digital memory via query")
-    parser.add_argument("--focus", type=str, default=None, help="Start a focused work session with distraction coach (e.g. --focus 'Coding')")
+    parser.add_argument("--focus", type=str, default=None, help="Start a focused work session with distraction coach")
     parser.add_argument("--focus-duration", type=int, default=45, help="Focus session duration in minutes (default: 45)")
+    parser.add_argument("--standup", action="store_true", help="Generate automated daily standup report from Git, Focus, and Memory")
+    parser.add_argument("--standup-date", type=str, default=None, help="Target date for standup report (YYYY-MM-DD)")
+    parser.add_argument("--macro-list", action="store_true", help="List all saved workflow automation macros")
+    parser.add_argument("--macro-run", type=str, default=None, help="Replay a workflow macro by name or ID")
+    parser.add_argument("--macro-dry-run", action="store_true", help="Simulate macro execution without modifying desktop state")
 
     args = parser.parse_args()
 
@@ -233,11 +122,11 @@ def main():
         import time
         from focus import FocusCoach
         print(BANNER)
-        print(f"🎯 Starting Focus Session: '{args.focus}' for {args.focus_duration} minutes...")
+        print(f"Starting Focus Session: '{args.focus}' for {args.focus_duration} minutes...")
         coach = FocusCoach()
         
         def on_nudge(alert):
-            print(f"\n⚠️  [FOCUS ALERT] {alert['message']}")
+            print(f"\n[FOCUS ALERT] {alert['message']}")
             print(f"    Suggested Action: Bring your code editor back to focus!\n")
             
         coach.add_listener(on_nudge)
@@ -248,7 +137,7 @@ def main():
             while True:
                 summary = coach.tracker.get_summary()
                 status_line = (
-                    f"\r⏱️  Elapsed: {int(summary['elapsed_seconds'])}s | "
+                    f"\rElapsed: {int(summary['elapsed_seconds'])}s | "
                     f"Productive: {summary['productivity_score']}% | "
                     f"Current App: {summary['current_process']} [{summary['current_category']}] "
                 )
@@ -256,7 +145,7 @@ def main():
                 time.sleep(1)
         except KeyboardInterrupt:
             res = coach.stop_session()
-            print(f"\n\n--- 🏁 Focus Session Completed ---")
+            print(f"\n\n--- Focus Session Completed ---")
             print(f"Goal               : {res.get('session_goal')}")
             print(f"Total Productive   : {res.get('time_productive_seconds')}s")
             print(f"Total Distracted   : {res.get('time_distracted_seconds')}s")
@@ -350,8 +239,69 @@ def main():
             print("\nDigital Memory stopped.")
         return
 
+    if args.standup:
+        from reports.standup_generator import StandupGenerator
+        from datetime import date
+        print(BANNER)
+        target_d = None
+        if args.standup_date:
+            try:
+                target_d = date.fromisoformat(args.standup_date)
+            except ValueError:
+                print(f"[Error] Invalid date format: '{args.standup_date}'. Use YYYY-MM-DD.")
+                return
+        gen = StandupGenerator()
+        print(f"Synthesizing Daily Standup Report for {target_d or date.today()}...\n")
+        report = gen.generate(target_date=target_d)
+        print(report["markdown"])
+        if report.get("report_path"):
+            print(f"\n[Saved report to: {report['report_path']}]")
+        return
+
+    if args.macro_list:
+        from automation.macro import MacroStore
+        print(BANNER)
+        print("Available Workflow Automation Macros:\n")
+        store = MacroStore()
+        macros = store.list_macros()
+        if not macros:
+            print("  No macros found.")
+        for m in macros:
+            last = f" (Last run: {m.last_run[:16]})" if m.last_run else ""
+            print(f"  - [{m.id}] {m.name} ({len(m.steps)} steps){last}")
+            if m.description:
+                print(f"      {m.description}")
+        return
+
+    if args.macro_run:
+        from automation.macro import MacroStore, MacroRunner
+        print(BANNER)
+        store = MacroStore()
+        macro = store.get_macro(args.macro_run)
+        if not macro:
+            print(f"[Error] Macro '{args.macro_run}' not found. Use --macro-list to see available macros.")
+            return
+
+        mode_str = "[DRY RUN] " if args.macro_dry_run else ""
+        print(f"{mode_str}Executing Workflow Macro: '{macro.name}' ({len(macro.steps)} steps)...\n")
+
+        runner = MacroRunner()
+
+        def on_step(idx, step, res):
+            status_txt = "OK" if res.get("success") else "FAILED"
+            msg = res.get("message", "")
+            print(f"  [{idx + 1}/{len(macro.steps)}] {step.action_type}: {status_txt} - {msg}")
+
+        result = runner.run(macro=macro, dry_run=args.macro_dry_run, on_step_callback=on_step)
+        if not args.macro_dry_run:
+            store.save_macro(macro)
+
+        outcome = "Completed successfully" if result["success"] else "Failed"
+        print(f"\nMacro {outcome} in {result['duration_seconds']}s.")
+        return
+
     if args.organize:
-        from organizer import FolderWatcher
+        from organizer.service import FolderWatcher
         print(BANNER)
         print("Starting Smart File Organizer...")
         watcher = FolderWatcher()
@@ -363,7 +313,7 @@ def main():
 
     if args.watch:
         import time
-        from organizer import FolderWatcher
+        from organizer.service import FolderWatcher
         print(BANNER)
         print("Starting Real-time Folder Watcher daemon...")
         watcher = FolderWatcher()
@@ -378,7 +328,7 @@ def main():
             print("\nWatcher stopped.")
         return
 
-    run_interactive_cli(preset_name=args.steer, alpha=args.strength, model_name=args.model)
+    run_interactive_cli()
 
 if __name__ == "__main__":
     main()
