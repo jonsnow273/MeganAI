@@ -16,13 +16,13 @@ interface Props {
 function TypingIndicator() {
   return (
     <div className="flex items-center gap-3 mb-6 animate-fade-in">
-      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-white flex-shrink-0 shadow-sm">
+      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white flex-shrink-0 shadow-sm">
         <Sparkles className="w-3.5 h-3.5" />
       </div>
-      <div className="p-3.5 rounded-2xl bg-white/90 border border-sky-100 shadow-gemini-sm flex gap-1.5 items-center">
-        <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-        <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" style={{ animationDelay: "0.2s" }} />
-        <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" style={{ animationDelay: "0.4s" }} />
+      <div className="p-3.5 rounded-2xl bg-[#141418] border border-[#27272e] shadow-sm flex gap-1.5 items-center">
+        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" style={{ animationDelay: "0.2s" }} />
+        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" style={{ animationDelay: "0.4s" }} />
       </div>
     </div>
   );
@@ -56,19 +56,19 @@ export function ChatArea({ messages, loading, error, onSend, currentUser }: Prop
   ];
 
   return (
-    <div className="relative flex flex-col flex-1 min-h-0 overflow-hidden">
-      {/* ── Empty State: Centered Greeting and Centered Input (Gemini Style) ── */}
+    <div className="relative flex flex-col flex-1 min-h-0 overflow-hidden bg-[#09090b]">
+      {/* ── Empty State: Centered Greeting & Input (Gemini/Linear Style) ── */}
       {!hasMessages ? (
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-3xl mx-auto w-full transition-all duration-500 ease-out animate-fade-in">
           {/* Welcome Headline Matching User Drawing */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 drop-shadow-sm flex items-center justify-center">
-              <img src="/megan-logo.png" alt="Megan" className="w-full h-full object-contain" />
+            <div className="w-16 h-16 mx-auto mb-4 drop-shadow-lg flex items-center justify-center">
+              <img src="/megan-logo.png" alt="Megan" className="w-full h-full object-contain rounded-2xl" />
             </div>
-            <h1 className="text-3xl md:text-5xl font-medium tracking-tight text-slate-800 italic mb-3">
-              welcome back! <span className="text-sky-600 not-italic font-semibold">{displayName}</span>
+            <h1 className="text-3xl md:text-5xl font-medium tracking-tight text-zinc-100 italic mb-3">
+              welcome back! <span className="bg-gradient-to-r from-rose-400 via-rose-500 to-amber-300 bg-clip-text text-transparent font-semibold not-italic">{displayName}</span>
             </h1>
-            <p className="text-sm md:text-base text-slate-500 font-normal max-w-lg mx-auto">
+            <p className="text-sm md:text-base text-zinc-400 font-normal max-w-lg mx-auto">
               How can I assist you with code, screen analysis, or desktop tasks today?
             </p>
           </div>
@@ -91,9 +91,9 @@ export function ChatArea({ messages, loading, error, onSend, currentUser }: Prop
                 <button
                   key={idx}
                   onClick={() => onSend(item.prompt)}
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/80 hover:bg-white border border-sky-150 hover:border-sky-300 text-xs font-medium text-slate-700 shadow-gemini-sm hover:shadow-gemini transition-all"
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#141418] hover:bg-[#1a1a20] border border-[#27272e] hover:border-rose-500/40 text-xs font-medium text-zinc-300 hover:text-white shadow-sm transition-all"
                 >
-                  <Icon className="w-3.5 h-3.5 text-sky-600" />
+                  <Icon className="w-3.5 h-3.5 text-rose-400" />
                   <span>{item.label}</span>
                 </button>
               );
@@ -119,7 +119,7 @@ export function ChatArea({ messages, loading, error, onSend, currentUser }: Prop
           {/* Error Banner */}
           {error && (
             <div className="max-w-chat mx-auto w-full px-4 mb-2">
-              <div className="px-4 py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs shadow-sm">
+              <div className="px-4 py-2.5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs shadow-sm">
                 {error}
               </div>
             </div>

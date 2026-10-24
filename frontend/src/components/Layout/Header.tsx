@@ -8,11 +8,11 @@ interface Props {
 
 export function Header({ sidebarCollapsed, onToggleSidebar, title }: Props) {
   return (
-    <header className="h-14 flex items-center justify-between px-4 border-b border-sky-150/70 bg-white/60 backdrop-blur-md flex-shrink-0 z-10">
+    <header className="h-14 flex items-center justify-between px-4 border-b border-[#27272e] bg-[#0d0d10] flex-shrink-0 z-10">
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-sky-50 transition-colors"
+          className="w-8 h-8 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c] transition-colors"
           aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {sidebarCollapsed ? (
@@ -23,22 +23,22 @@ export function Header({ sidebarCollapsed, onToggleSidebar, title }: Props) {
         </button>
 
         {title ? (
-          <span className="text-xs md:text-sm text-slate-800 font-medium truncate max-w-md">
+          <span className="text-xs md:text-sm text-zinc-200 font-medium truncate max-w-md">
             {title}
           </span>
         ) : (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-800 tracking-tight">Megan Assistant</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-100 text-sky-700 border border-sky-200">
-              Gateway Active
+            <span className="text-xs font-semibold text-zinc-200 tracking-tight">Megan Assistant</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/25">
+              Nemotron Active
             </span>
           </div>
         )}
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-medium text-emerald-700">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-[11px] font-medium text-emerald-400">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           <span>Connected</span>
         </div>
       </div>

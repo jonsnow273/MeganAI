@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────
-   Light Blue Gradient Theme (Gemini Style)
-   Soft, airy ice-blue gradient with dark slate text
+   Theme: Carbon Matte & Sunset Coral / Crimson
+   Sleek, high-contrast, modern Linear-style aesthetic
    ───────────────────────────────────────── */
 
 * {
@@ -14,9 +14,8 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, #f8fbff 0%, #ebf4fe 45%, #e2effe 100%);
-  background-attachment: fixed;
-  color: #0f172a;
+  background-color: #09090b;
+  color: #f4f4f6;
   -webkit-font-smoothing: antialiased;
   margin: 0;
   padding: 0;
@@ -25,24 +24,24 @@ body {
 
 /* ── Scrollbars ── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #27272e;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #3f3f46;
 }
 
 /* ── Selection ── */
 ::selection {
-  background: #bae6fd;
-  color: #0369a1;
+  background: rgba(244, 63, 94, 0.3);
+  color: #ffffff;
 }
 
 /* ── Focus reset ── */
@@ -52,37 +51,32 @@ button:focus {
   outline: none;
 }
 
-/* ── Fade in animations ── */
+/* ── Animations ── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes floatGentle {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
-}
-
 .fade-in {
-  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-fade-in {
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* ── Glassmorphism helper ── */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(225, 239, 254, 0.9);
+/* ── Carbon Glass Panels ── */
+.carbon-panel {
+  background: rgba(18, 18, 22, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid #27272e;
 }
 
-.glass-panel-elevated {
-  background: rgba(255, 255, 255, 0.95);
+.carbon-panel-elevated {
+  background: rgba(24, 24, 28, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(219, 234, 254, 0.9);
-  box-shadow: 0 10px 30px -4px rgba(12, 74, 110, 0.08);
+  border: 1px solid #35353c;
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.6);
 }

@@ -153,24 +153,24 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
 
         {/* Media Preview Card */}
         {attachment && (
-          <div className="mb-2 p-2.5 bg-white/95 border border-sky-150 rounded-2xl flex items-center justify-between gap-3 shadow-sm animate-fade-in">
+          <div className="mb-2 p-2.5 bg-[#141418] border border-[#27272e] rounded-2xl flex items-center justify-between gap-3 shadow-sm animate-fade-in">
             <div className="flex items-center gap-3 min-w-0">
               {attachment.type === "image" ? (
                 <img
                   src={attachment.preview}
                   alt="Attachment preview"
-                  className="w-12 h-12 rounded-xl object-cover border border-sky-100"
+                  className="w-12 h-12 rounded-xl object-cover border border-[#27272e]"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center border border-sky-100 text-sky-600">
+                <div className="w-12 h-12 rounded-xl bg-zinc-900 flex items-center justify-center border border-[#27272e] text-rose-400">
                   <Film className="w-6 h-6" />
                 </div>
               )}
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-slate-800 truncate">
+                <div className="text-xs font-semibold text-zinc-100 truncate">
                   {attachment.file.name}
                 </div>
-                <div className="text-[11px] text-slate-500">
+                <div className="text-[11px] text-zinc-400">
                   {(attachment.file.size / (1024 * 1024)).toFixed(2)} MB · {attachment.type.toUpperCase()}
                 </div>
               </div>
@@ -178,7 +178,7 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
 
             <button
               onClick={() => setAttachment(null)}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
               title="Remove attachment"
             >
               <X className="w-4 h-4" />
@@ -186,15 +186,15 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
           </div>
         )}
 
-        {/* Rounded Input Pill Container */}
-        <div className={`relative flex items-end gap-2 bg-white/95 backdrop-blur-md border border-sky-200/80 rounded-3xl px-4 py-3 shadow-gemini transition-all duration-300 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100/60 ${
+        {/* Carbon Pill Container */}
+        <div className={`relative flex items-end gap-2 bg-[#121216] border border-[#27272e] rounded-3xl px-4 shadow-carbon-card transition-all duration-300 focus-within:border-rose-500/70 focus-within:ring-2 focus-within:ring-rose-500/15 ${
           isCentered ? "py-4 text-base" : "py-3"
         }`}>
           {/* Plus / Attach button */}
           <button
             onClick={() => fileInputRef.current?.click()}
             type="button"
-            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-sky-600 hover:bg-sky-50 transition-colors"
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-rose-400 hover:bg-[#1a1a20] transition-colors"
             title="Attach image or video"
             aria-label="Attach file"
           >
@@ -216,7 +216,7 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
             }
             disabled={disabled}
             rows={1}
-            className="flex-1 bg-transparent text-slate-800 placeholder-slate-400 text-sm leading-relaxed resize-none focus:outline-none disabled:opacity-50 max-h-[180px] self-center"
+            className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 text-sm leading-relaxed resize-none focus:outline-none disabled:opacity-50 max-h-[180px] self-center"
           />
 
           {/* Voice Input / Mic button */}
@@ -225,8 +225,8 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
             type="button"
             className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
               isListening
-                ? "text-red-500 bg-red-50 ring-2 ring-red-400/40 animate-pulse"
-                : "text-slate-500 hover:text-sky-600 hover:bg-sky-50"
+                ? "text-rose-400 bg-rose-950/60 ring-2 ring-rose-500/50 animate-pulse"
+                : "text-zinc-400 hover:text-rose-400 hover:bg-[#1a1a20]"
             }`}
             title={isListening ? "Stop listening" : "Click to speak"}
             aria-label="Voice input"
@@ -238,7 +238,7 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
           <button
             onClick={handleSend}
             disabled={disabled || (!text.trim() && !attachment)}
-            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-sky-600 hover:bg-sky-500 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm shadow-sky-600/30"
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-coral-glow-sm"
             aria-label="Send"
           >
             <Send className="w-4 h-4" />
@@ -247,7 +247,7 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
 
         {/* Subtle Disclaimer */}
         {!isCentered && (
-          <p className="text-center text-[11px] text-slate-400 mt-2">
+          <p className="text-center text-[11px] text-zinc-500 mt-2">
             Megan can make mistakes. Verify important code and data.
           </p>
         )}

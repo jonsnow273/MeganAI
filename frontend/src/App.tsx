@@ -101,7 +101,7 @@ export default function App() {
   }, [mobileMenuOpen]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-sky-50/70 via-sky-100/40 to-sky-50/80 text-slate-800">
+    <div className="flex h-screen overflow-hidden bg-[#09090b] text-[#f4f4f6]">
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar
@@ -122,14 +122,14 @@ export default function App() {
       {mobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden animate-fade-in"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-64 bg-white z-50 md:hidden shadow-2xl">
+          <div className="fixed inset-y-0 left-0 w-64 bg-[#0d0d10] z-50 md:hidden shadow-2xl border-r border-[#27272e]">
             <div className="absolute top-3 right-3 z-10">
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
                 aria-label="Close menu"
               >
                 <X className="w-5 h-5" />
@@ -152,7 +152,7 @@ export default function App() {
       )}
 
       {/* Main Canvas Area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-transparent">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-[#09090b]">
         {/* Header */}
         <Header
           sidebarCollapsed={sidebarCollapsed}

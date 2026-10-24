@@ -135,14 +135,14 @@ export function Sidebar({
 
   if (collapsed) {
     return (
-      <aside className="w-16 flex flex-col items-center py-4 bg-white/80 backdrop-blur-md border-r border-sky-150/80 h-full flex-shrink-0 transition-all shadow-sm">
+      <aside className="w-16 flex flex-col items-center py-4 bg-[#0d0d10] border-r border-[#27272e] h-full flex-shrink-0 transition-all">
         <div className="w-9 h-9 flex items-center justify-center mb-3">
-          <img src="/megan-logo.png" alt="Megan" className="w-8 h-8 object-contain" />
+          <img src="/megan-logo.png" alt="Megan" className="w-8 h-8 rounded-lg object-contain" />
         </div>
 
         <button
           onClick={onToggle}
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-sky-50 transition-colors mb-4"
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#18181c] transition-colors mb-4"
           aria-label="Expand sidebar"
         >
           <PanelLeftOpen className="w-5 h-5" />
@@ -150,7 +150,7 @@ export function Sidebar({
 
         <button
           onClick={onNewChat}
-          className="w-10 h-10 rounded-xl flex items-center justify-center bg-sky-600 hover:bg-sky-500 text-white shadow-sm transition-colors mb-6"
+          className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white shadow-coral-glow-sm transition-colors mb-6"
           title="New Chat"
         >
           <Plus className="w-5 h-5" />
@@ -161,10 +161,10 @@ export function Sidebar({
             onClick={() => onNavigate("chat")}
             className={`w-full h-10 rounded-xl flex items-center justify-center transition-colors ${
               currentView === "chat"
-                ? "bg-sky-100 text-sky-700 font-medium"
-                : "text-slate-500 hover:text-slate-800 hover:bg-sky-50"
+                ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                : "text-zinc-400 hover:text-white hover:bg-[#18181c]"
             }`}
-            title="Chat Area"
+            title="Chat Assistant"
           >
             <MessageSquare className="w-5 h-5" />
           </button>
@@ -178,8 +178,8 @@ export function Sidebar({
                 onClick={() => onNavigate(item.id)}
                 className={`w-full h-10 rounded-xl flex items-center justify-center transition-colors ${
                   isActive
-                    ? "bg-sky-100 text-sky-700 font-medium"
-                    : "text-slate-500 hover:text-slate-800 hover:bg-sky-50"
+                    ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                    : "text-zinc-400 hover:text-white hover:bg-[#18181c]"
                 }`}
                 title={item.label}
               >
@@ -191,7 +191,7 @@ export function Sidebar({
 
         <button
           onClick={onOpenAuth}
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-sky-50 transition-colors mt-auto"
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#18181c] transition-colors mt-auto"
           title={currentUser ? currentUser.username : "Sign In / Register"}
         >
           <User className="w-5 h-5" />
@@ -201,18 +201,18 @@ export function Sidebar({
   }
 
   return (
-    <aside className="w-64 flex flex-col bg-white/90 backdrop-blur-md border-r border-sky-150/80 h-full flex-shrink-0 transition-all shadow-sm">
-      {/* ── TOP SECTION (Matching Sketch: Header, New Chat, Workspaces, Chats) ── */}
+    <aside className="w-64 flex flex-col bg-[#0d0d10] border-r border-[#27272e] h-full flex-shrink-0 transition-all">
+      {/* ── TOP SECTION (Matching Sketch: Logo, New Chat, Workspaces, Recent Chats) ── */}
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Brand Header */}
-        <div className="flex items-center justify-between px-4 py-3.5 border-b border-sky-150/70 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#27272e] flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <img src="/megan-logo.png" alt="Megan AI" className="w-8 h-8 rounded-xl object-contain shadow-sm" />
-            <span className="text-sm font-bold text-slate-900 tracking-tight">Megan AI</span>
+            <img src="/megan-logo.png" alt="Megan AI" className="w-8 h-8 rounded-lg object-contain shadow-sm" />
+            <span className="text-sm font-bold text-zinc-100 tracking-tight">Megan AI</span>
           </div>
           <button
             onClick={onToggle}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-sky-50 transition-colors"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#18181c] transition-colors"
             aria-label="Collapse sidebar"
           >
             <PanelLeftClose className="w-4 h-4" />
@@ -223,7 +223,7 @@ export function Sidebar({
         <div className="p-3 flex-shrink-0">
           <button
             onClick={onNewChat}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-sm transition-all shadow-sky-600/20 active:scale-[0.99]"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white text-xs font-semibold shadow-coral-glow-sm transition-all active:scale-[0.99]"
           >
             <Plus className="w-4 h-4" />
             <span>New Chat</span>
@@ -232,7 +232,7 @@ export function Sidebar({
 
         {/* Workspace Feature Views */}
         <div className="px-3 pb-2 flex flex-col gap-1 flex-shrink-0">
-          <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <div className="px-2 py-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
             Workspace Tools
           </div>
 
@@ -240,11 +240,11 @@ export function Sidebar({
             onClick={() => onNavigate("chat")}
             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-colors ${
               currentView === "chat"
-                ? "bg-sky-100/80 text-sky-800 font-semibold shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-sky-50"
+                ? "bg-rose-500/15 text-rose-300 font-semibold border border-rose-500/30"
+                : "text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c]"
             }`}
           >
-            <MessageSquare className="w-4 h-4 text-sky-600" />
+            <MessageSquare className="w-4 h-4 text-rose-400" />
             <span>Chat Assistant</span>
           </button>
 
@@ -257,16 +257,16 @@ export function Sidebar({
                 onClick={() => onNavigate(item.id)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors ${
                   isActive
-                    ? "bg-sky-100/80 text-sky-800 font-semibold shadow-sm"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-sky-50"
+                    ? "bg-rose-500/15 text-rose-300 font-semibold border border-rose-500/30"
+                    : "text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c]"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Icon className="w-4 h-4 text-sky-600 flex-shrink-0" />
+                  <Icon className="w-4 h-4 text-rose-400 flex-shrink-0" />
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-sky-200/60 text-sky-800 font-medium">
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-rose-500/20 text-rose-300 font-medium border border-rose-500/30">
                     {item.badge}
                   </span>
                 )}
@@ -277,13 +277,13 @@ export function Sidebar({
 
         {/* Recent Conversations */}
         <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
-          <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+          <div className="px-2 py-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
             <span>Recent Chats</span>
-            {loading && <span className="text-[10px] text-slate-400 lowercase">syncing...</span>}
+            {loading && <span className="text-[10px] text-zinc-500 lowercase">syncing...</span>}
           </div>
 
           {sessions.length === 0 && !loading && (
-            <div className="px-3 py-6 text-xs text-slate-400 text-center">
+            <div className="px-3 py-6 text-xs text-zinc-500 text-center">
               No conversations yet
             </div>
           )}
@@ -299,27 +299,27 @@ export function Sidebar({
                   onClick={() => onSelectSession(session.session_id)}
                   className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs transition-colors ${
                     isActive
-                      ? "bg-sky-100/80 text-sky-800 font-semibold shadow-sm"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-sky-50"
+                      ? "bg-rose-500/15 text-rose-300 font-semibold border border-rose-500/30"
+                      : "text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c]"
                   }`}
                 >
                   <span className="truncate flex-1 text-left">{title}</span>
-                  <span className="text-[10px] text-slate-400 flex-shrink-0">{relTime}</span>
+                  <span className="text-[10px] text-zinc-500 flex-shrink-0">{relTime}</span>
                 </button>
 
                 <button
                   onClick={() => setMenuOpen(menuOpen === session.session_id ? null : session.session_id)}
-                  className="absolute right-1.5 top-2 w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute right-1.5 top-2 w-5 h-5 rounded flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-label="Options"
                 >
                   <MoreVertical className="w-3 h-3" />
                 </button>
 
                 {menuOpen === session.session_id && (
-                  <div className="absolute right-2 top-8 bg-white border border-sky-150 rounded-xl shadow-lg py-1 z-20 min-w-[110px] animate-fade-in">
+                  <div className="absolute right-2 top-8 bg-[#18181c] border border-[#27272e] rounded-xl shadow-xl py-1 z-20 min-w-[110px] animate-fade-in">
                     <button
                       onClick={(e) => handleDelete(e, session.session_id)}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-rose-400 hover:bg-rose-950/40 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Delete</span>
@@ -333,21 +333,21 @@ export function Sidebar({
       </div>
 
       {/* ── DISTINCT HORIZONTAL DIVIDER (Exact Match to Sketch) ── */}
-      <div className="border-t-2 border-slate-300 w-full" />
+      <div className="border-t-2 border-[#27272e] w-full" />
 
       {/* ── BOTTOM SECTION (User Account, Telemetry, and Logout) ── */}
-      <div className="p-3 bg-sky-50/50 flex-shrink-0">
+      <div className="p-3 bg-[#0a0a0c] flex-shrink-0">
         {currentUser ? (
-          <div className="flex items-center justify-between p-2.5 rounded-2xl bg-white border border-sky-150 shadow-sm">
+          <div className="flex items-center justify-between p-2.5 rounded-2xl bg-[#141418] border border-[#27272e]">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-sky-100 border border-sky-200 flex items-center justify-center text-sky-700 flex-shrink-0 font-bold text-xs">
+              <div className="w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400 flex-shrink-0 font-bold text-xs">
                 {currentUser.username.slice(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-slate-900 truncate">
+                <div className="text-xs font-semibold text-zinc-200 truncate">
                   {currentUser.display_name || currentUser.username}
                 </div>
-                <div className="text-[10px] text-slate-500 truncate">
+                <div className="text-[10px] text-zinc-500 truncate">
                   @{currentUser.username}
                 </div>
               </div>
@@ -355,7 +355,7 @@ export function Sidebar({
 
             <button
               onClick={onLogout}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-400 hover:text-rose-400 hover:bg-[#18181c] transition-colors"
               title="Sign out"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -364,10 +364,10 @@ export function Sidebar({
         ) : (
           <button
             onClick={onOpenAuth}
-            className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-white border border-sky-200 hover:border-sky-400 text-slate-700 hover:text-sky-700 hover:bg-sky-50/50 shadow-sm transition-all text-xs font-medium"
+            className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-[#141418] border border-[#27272e] hover:border-rose-500/50 text-zinc-300 hover:text-rose-400 transition-all text-xs font-medium"
           >
             <div className="flex items-center gap-2">
-              <LogIn className="w-4 h-4 text-sky-600" />
+              <LogIn className="w-4 h-4 text-rose-400" />
               <span>Sign In / Create Account</span>
             </div>
           </button>

@@ -9,32 +9,35 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Light blue gradient theme colors
-        skytheme: {
-          50: '#f8fbff',
-          100: '#f0f7fe',
-          150: '#e6f2fd',
-          200: '#dbeafe',
-          300: '#bfdbfe',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
+        // Carbon Matte & Sunset Coral Theme
+        carbon: {
+          bg: '#09090b',
+          sidebar: '#0d0d10',
+          card: '#121216',
+          surface: '#18181c',
+          hover: '#222227',
+          border: '#27272d',
+          borderLight: '#35353c',
+          text: '#f4f4f6',
+          muted: '#a1a1aa',
+          subtle: '#71717a',
         },
-        slate: {
-          850: '#152033',
+        coral: {
+          300: '#fda4af',
+          400: '#fb7185',
+          500: '#f43f5e',
+          600: '#e11d48',
+          700: '#be123c',
         },
-        // Backwards compatibility mappings mapped to soft light theme
+        // Backwards-compatible mappings for dark
         dark: {
-          bg: '#f4f8fe',
-          surface: '#ffffff',
-          border: '#e1effe',
-          hover: '#edf5ff',
-          text: '#0f172a',
-          muted: '#64748b',
-          subtle: '#94a3b8',
+          bg: '#09090b',
+          surface: '#121216',
+          border: '#27272d',
+          hover: '#1c1c22',
+          text: '#f4f4f6',
+          muted: '#a1a1aa',
+          subtle: '#71717a',
         },
       },
       fontFamily: {
@@ -44,8 +47,9 @@ export default {
         'chat': '780px',
       },
       boxShadow: {
-        'gemini': '0 8px 30px -4px rgba(12, 74, 110, 0.08), 0 4px 12px -2px rgba(12, 74, 110, 0.04)',
-        'gemini-sm': '0 2px 8px -1px rgba(12, 74, 110, 0.06)',
+        'coral-glow': '0 0 25px -4px rgba(244, 63, 94, 0.25)',
+        'coral-glow-sm': '0 0 15px -2px rgba(244, 63, 94, 0.20)',
+        'carbon-card': '0 4px 20px -2px rgba(0, 0, 0, 0.45)',
       },
     },
   },
