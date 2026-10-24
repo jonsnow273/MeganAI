@@ -5,9 +5,11 @@ import type { Attachment } from "../../hooks/useChat";
 interface Props {
   onSend: (message: string, attachment?: Attachment | null) => void;
   disabled: boolean;
+  placeholder?: string;
+  isCentered?: boolean;
 }
 
-export function InputBar({ onSend, disabled }: Props) {
+export function InputBar({ onSend, disabled, placeholder = "type here!", isCentered = false }: Props) {
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [isListening, setIsListening] = useState(false);
@@ -17,7 +19,7 @@ export function InputBar({ onSend, disabled }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
 
-  // Setup Web Speech Recognition if available
+  // Setup Web Speech Recognition
   useEffect(() => {
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -62,7 +64,7 @@ export function InputBar({ onSend, disabled }: Props) {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
   }, [text]);
 
   // Focus on enable
@@ -72,7 +74,7 @@ export function InputBar({ onSend, disabled }: Props) {
 
   const toggleListening = () => {
     if (!speechSupported || !recognitionRef.current) {
-      alert("Speech recognition is not supported in this browser. Please use Google Chrome, Microsoft Edge, or a Chromium browser.");
+      alert("Speech recognition is not supported in this browser. Please use Chrome, Edge, or a Chromium browser.");
       return;
     }
 
@@ -138,7 +140,7 @@ export function InputBar({ onSend, disabled }: Props) {
   };
 
   return (
-    <div className="flex flex-col items-center px-4 py-4 bg-dark-bg">
+    <div className={`w-full flex flex-col items-center transition-all duration-500 ${isCentered ? "py-2" : "py-3"}`}>
       <div className="w-full max-w-3xl">
         {/* Hidden file input */}
         <input
@@ -151,24 +153,24 @@ export function InputBar({ onSend, disabled }: Props) {
 
         {/* Media Preview Card */}
         {attachment && (
-          <div className="mb-2 p-2 bg-dark-surface border border-dark-border rounded-xl flex items-center justify-between gap-3 animate-fade-in">
+          <div className="mb-2 p-2.5 bg-white/95 border border-sky-150 rounded-2xl flex items-center justify-between gap-3 shadow-sm animate-fade-in">
             <div className="flex items-center gap-3 min-w-0">
               {attachment.type === "image" ? (
                 <img
                   src={attachment.preview}
                   alt="Attachment preview"
-                  className="w-12 h-12 rounded object-cover border border-dark-border"
+                  className="w-12 h-12 rounded-xl object-cover border border-sky-100"
                 />
               ) : (
-                <div className="w-12 h-12 rounded bg-dark-bg flex items-center justify-center border border-dark-border text-dark-muted">
+                <div className="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center border border-sky-100 text-sky-600">
                   <Film className="w-6 h-6" />
                 </div>
               )}
               <div className="min-w-0">
-                <div className="text-xs font-medium text-dark-text truncate">
+                <div className="text-xs font-semibold text-slate-800 truncate">
                   {attachment.file.name}
                 </div>
-                <div className="text-[11px] text-dark-subtle">
+                <div className="text-[11px] text-slate-500">
                   {(attachment.file.size / (1024 * 1024)).toFixed(2)} MB · {attachment.type.toUpperCase()}
                 </div>
               </div>
@@ -176,7 +178,7 @@ export function InputBar({ onSend, disabled }: Props) {
 
             <button
               onClick={() => setAttachment(null)}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
               title="Remove attachment"
             >
               <X className="w-4 h-4" />
@@ -184,13 +186,15 @@ export function InputBar({ onSend, disabled }: Props) {
           </div>
         )}
 
-        {/* Pill input container */}
-        <div className="relative flex items-end gap-2 bg-dark-surface border border-dark-border rounded-3xl px-3 py-2.5 focus-within:border-dark-subtle transition-colors">
+        {/* Rounded Input Pill Container */}
+        <div className={`relative flex items-end gap-2 bg-white/95 backdrop-blur-md border border-sky-200/80 rounded-3xl px-4 py-3 shadow-gemini transition-all duration-300 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100/60 ${
+          isCentered ? "py-4 text-base" : "py-3"
+        }`}>
           {/* Plus / Attach button */}
           <button
             onClick={() => fileInputRef.current?.click()}
             type="button"
-            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-sky-600 hover:bg-sky-50 transition-colors"
             title="Attach image or video"
             aria-label="Attach file"
           >
@@ -208,11 +212,11 @@ export function InputBar({ onSend, disabled }: Props) {
                 ? "Listening... speak now"
                 : attachment
                 ? "Ask a question about this media..."
-                : "Message Megan"
+                : placeholder
             }
             disabled={disabled}
             rows={1}
-            className="flex-1 bg-transparent text-dark-text placeholder-dark-muted text-sm resize-none focus:outline-none disabled:opacity-50 max-h-[200px]"
+            className="flex-1 bg-transparent text-slate-800 placeholder-slate-400 text-sm leading-relaxed resize-none focus:outline-none disabled:opacity-50 max-h-[180px] self-center"
           />
 
           {/* Voice Input / Mic button */}
@@ -221,30 +225,32 @@ export function InputBar({ onSend, disabled }: Props) {
             type="button"
             className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
               isListening
-                ? "text-red-400 bg-red-950/60 ring-2 ring-red-500/50 animate-pulse"
-                : "text-dark-muted hover:text-dark-text hover:bg-dark-hover"
+                ? "text-red-500 bg-red-50 ring-2 ring-red-400/40 animate-pulse"
+                : "text-slate-500 hover:text-sky-600 hover:bg-sky-50"
             }`}
             title={isListening ? "Stop listening" : "Click to speak"}
             aria-label="Voice input"
           >
-            {isListening ? <MicOff className="w-4.5 h-4.5" /> : <Mic className="w-4.5 h-4.5" />}
+            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
           </button>
 
           {/* Send button */}
           <button
             onClick={handleSend}
             disabled={disabled || (!text.trim() && !attachment)}
-            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-sky-600 hover:bg-sky-500 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-sm shadow-sky-600/30"
             aria-label="Send"
           >
-            <Send className="w-4.5 h-4.5" />
+            <Send className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Disclaimer */}
-        <p className="text-center text-xs text-dark-subtle mt-2">
-          Megan can make mistakes. Check important info.
-        </p>
+        {/* Subtle Disclaimer */}
+        {!isCentered && (
+          <p className="text-center text-[11px] text-slate-400 mt-2">
+            Megan can make mistakes. Verify important code and data.
+          </p>
+        )}
       </div>
     </div>
   );

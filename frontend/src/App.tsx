@@ -3,8 +3,7 @@ import { X } from "lucide-react";
 import { useChat } from "./hooks/useChat";
 import { Header } from "./components/Layout/Header";
 import { Sidebar } from "./components/Layout/Sidebar";
-import { ChatWindow } from "./components/Chat/ChatWindow";
-import { InputBar } from "./components/Chat/InputBar";
+import { ChatArea } from "./components/Chat/ChatArea";
 import { ScreenCopilotView } from "./components/Features/ScreenCopilotView";
 import { TimeMachineView } from "./components/Features/TimeMachineView";
 import { StandupView } from "./components/Features/StandupView";
@@ -17,7 +16,7 @@ const API = "http://localhost:8000";
 
 function generateTitle(firstMessage: string): string {
   if (!firstMessage || firstMessage.trim().length === 0) return "New conversation";
-  const cleaned = firstMessage.trim().slice(0, 60);
+  const cleaned = firstMessage.trim().slice(0, 50);
   return cleaned.length < firstMessage.trim().length ? `${cleaned}...` : cleaned;
 }
 
@@ -50,14 +49,14 @@ export default function App() {
     ? generateTitle(messages[0].content)
     : undefined;
 
-  // New Chat handler — creates fresh session and returns to chat view
+  // New Chat handler
   const handleNewChat = useCallback(() => {
     clearChat();
     setCurrentView("chat");
     setMobileMenuOpen(false);
   }, [clearChat]);
 
-  // Select session — loads message history into active chat view
+  // Select session
   const handleSelectSession = useCallback(async (sid: string) => {
     setCurrentView("chat");
     setMobileMenuOpen(false);
@@ -102,7 +101,7 @@ export default function App() {
   }, [mobileMenuOpen]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-dark-bg text-dark-text">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-sky-50/70 via-sky-100/40 to-sky-50/80 text-slate-800">
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar
@@ -123,14 +122,14 @@ export default function App() {
       {mobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden animate-fade-in"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-64 bg-dark-surface z-50 md:hidden">
-            <div className="absolute top-3 right-3">
+          <div className="fixed inset-y-0 left-0 w-64 bg-white z-50 md:hidden shadow-2xl">
+            <div className="absolute top-3 right-3 z-10">
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
                 aria-label="Close menu"
               >
                 <X className="w-5 h-5" />
@@ -152,8 +151,8 @@ export default function App() {
         </>
       )}
 
-      {/* Main Column */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      {/* Main Canvas Area */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-transparent">
         {/* Header */}
         <Header
           sidebarCollapsed={sidebarCollapsed}
@@ -167,15 +166,15 @@ export default function App() {
           title={currentView === "chat" ? conversationTitle : undefined}
         />
 
-        {/* Persistent Chat View: preserved when switching tabs */}
+        {/* Persistent Chat Area: Preserved when switching tabs */}
         <div className={currentView === "chat" ? "flex flex-col flex-1 min-h-0 overflow-hidden" : "hidden"}>
-          <ChatWindow messages={messages} loading={loading} />
-          {error && (
-            <div className="mx-4 mb-2 px-4 py-2 rounded-lg bg-dark-surface border border-dark-border text-red-400 text-xs">
-              {error}
-            </div>
-          )}
-          <InputBar onSend={sendMessage} disabled={loading} />
+          <ChatArea
+            messages={messages}
+            loading={loading}
+            error={error}
+            onSend={sendMessage}
+            currentUser={currentUser}
+          />
         </div>
 
         {/* Feature Views */}

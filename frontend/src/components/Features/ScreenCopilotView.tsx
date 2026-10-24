@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Monitor, Camera, Upload, Loader2, Sparkles, HelpCircle } from "lucide-react";
+import { Monitor, Camera, Upload, Loader2, Sparkles, HelpCircle, AlertCircle } from "lucide-react";
 
 const API = "http://localhost:8000";
 
@@ -76,30 +76,35 @@ export function ScreenCopilotView() {
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-2">
-          <Monitor className="w-6 h-6 text-indigo-400" />
-          <h1 className="text-2xl font-semibold text-dark-text">Multimodal Screen Copilot</h1>
+          <div className="w-10 h-10 rounded-2xl bg-sky-100 border border-sky-200 flex items-center justify-center text-sky-600 shadow-sm">
+            <Monitor className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Multimodal Screen Copilot</h1>
+            <p className="text-xs text-slate-500 font-medium">Vision-powered desktop debugger and IDE inspector</p>
+          </div>
         </div>
 
-        <p className="text-sm text-dark-muted mb-6 max-w-2xl">
+        <p className="text-sm text-slate-600 mb-6 max-w-2xl leading-relaxed">
           Instantly inspect your active monitor or upload an image to let the Multimodal Vision model diagnose terminal stack traces, review IDE code, explain interface layouts, and prescribe actionable fixes.
         </p>
 
         {/* Instructions Card */}
-        <div className="mb-6 p-4 rounded-xl bg-dark-surface/60 border border-dark-border text-xs text-dark-muted space-y-2">
-          <div className="flex items-center gap-2 font-medium text-dark-text">
-            <HelpCircle className="w-4 h-4 text-indigo-400" />
+        <div className="mb-6 p-5 rounded-2xl bg-white/80 border border-sky-150 text-xs text-slate-600 shadow-sm space-y-2.5">
+          <div className="flex items-center gap-2 font-semibold text-slate-800">
+            <HelpCircle className="w-4 h-4 text-sky-600" />
             <span>How to use Screen Copilot:</span>
           </div>
-          <ul className="list-disc list-inside space-y-1 pl-1">
+          <ul className="list-disc list-inside space-y-1.5 pl-1 text-slate-600">
             <li><strong>Capture Desktop Screen:</strong> Grabs your primary monitor automatically via Win32 GDI and sends it to the vision model.</li>
             <li><strong>Upload Screenshot:</strong> Upload any error dialog, cropped terminal trace, or UI screenshot directly for diagnosis.</li>
-            <li><strong>Custom Inspection Query:</strong> Type specific instructions below (e.g. &ldquo;Find the syntax error in my Python code&rdquo;) before clicking inspect.</li>
+            <li><strong>Custom Inspection Query:</strong> Type specific instructions below before clicking inspect.</li>
           </ul>
         </div>
 
-        {/* Query Input */}
-        <div className="mb-4">
-          <label className="block text-xs font-medium text-dark-muted mb-1.5">
+        {/* Query Input Card */}
+        <div className="mb-5 p-5 rounded-2xl bg-white border border-sky-150 shadow-sm space-y-3">
+          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
             Inspection Prompt / Question
           </label>
           <input
@@ -107,53 +112,54 @@ export function ScreenCopilotView() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="What should Megan look for on your screen?"
-            className="w-full px-4 py-2.5 bg-dark-surface border border-dark-border rounded-xl text-xs text-dark-text placeholder-dark-muted focus:outline-none focus:border-indigo-500"
+            className="w-full px-4 py-3 bg-sky-50/50 border border-sky-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all"
           />
-        </div>
 
-        {/* Hidden File Input */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          accept="image/*"
-          className="hidden"
-        />
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept="image/*"
+            className="hidden"
+          />
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={handleCapture}
-            disabled={loading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors disabled:opacity-50 shadow-md shadow-indigo-600/20"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Analyzing Screen...</span>
-              </>
-            ) : (
-              <>
-                <Camera className="w-4 h-4" />
-                <span>Capture & Analyze Desktop</span>
-              </>
-            )}
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <button
+              onClick={handleCapture}
+              disabled={loading}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition-all disabled:opacity-50 shadow-sm shadow-sky-600/20 active:scale-[0.99]"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Analyzing Screen...</span>
+                </>
+              ) : (
+                <>
+                  <Camera className="w-4 h-4" />
+                  <span>Capture & Analyze Desktop</span>
+                </>
+              )}
+            </button>
 
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark-surface border border-dark-border text-dark-text hover:bg-dark-hover text-xs font-medium transition-colors disabled:opacity-50"
-          >
-            <Upload className="w-4 h-4 text-dark-muted" />
-            <span>Upload Screenshot</span>
-          </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-sky-200 text-slate-700 hover:text-sky-700 hover:bg-sky-50 text-xs font-medium transition-colors disabled:opacity-50"
+            >
+              <Upload className="w-4 h-4 text-slate-400" />
+              <span>Upload Screenshot</span>
+            </button>
+          </div>
         </div>
 
         {/* Error message */}
         {error && (
-          <div className="mt-4 p-4 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs">
-            Error: {error}
+          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs flex items-center gap-2 animate-fade-in">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>Error: {error}</span>
           </div>
         )}
 
@@ -161,20 +167,20 @@ export function ScreenCopilotView() {
         {result && (
           <div className="mt-6 space-y-4 animate-fade-in">
             {imageSrc && (
-              <div className="rounded-xl border border-dark-border overflow-hidden bg-black/60 p-1">
+              <div className="rounded-2xl border border-sky-150 overflow-hidden bg-slate-900 p-2 shadow-sm">
                 <img
                   src={imageSrc}
                   alt="Inspected Screen"
-                  className="w-full max-h-[420px] object-contain rounded-lg"
+                  className="w-full max-h-[460px] object-contain rounded-xl"
                 />
               </div>
             )}
-            <div className="p-5 rounded-xl bg-dark-surface border border-dark-border">
-              <div className="flex items-center gap-2 text-xs font-semibold text-indigo-400 mb-2">
+            <div className="p-6 rounded-2xl bg-white border border-sky-150 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-bold text-sky-700 mb-3">
                 <Sparkles className="w-4 h-4" />
                 <span>Vision Copilot Diagnosis</span>
               </div>
-              <p className="text-xs text-dark-text leading-relaxed whitespace-pre-wrap">
+              <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-sans">
                 {result.analysis || result.diagnosis}
               </p>
             </div>

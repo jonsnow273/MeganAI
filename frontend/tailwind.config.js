@@ -9,22 +9,43 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Plain dark greys — no accent colors
+        // Light blue gradient theme colors
+        skytheme: {
+          50: '#f8fbff',
+          100: '#f0f7fe',
+          150: '#e6f2fd',
+          200: '#dbeafe',
+          300: '#bfdbfe',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
+        },
+        slate: {
+          850: '#152033',
+        },
+        // Backwards compatibility mappings mapped to soft light theme
         dark: {
-          bg: '#0d0d0d',
-          surface: '#171717',
-          border: '#2a2a2a',
-          hover: '#202020',
-          text: '#ececec',
-          muted: '#8e8e8e',
-          subtle: '#565656',
+          bg: '#f4f8fe',
+          surface: '#ffffff',
+          border: '#e1effe',
+          hover: '#edf5ff',
+          text: '#0f172a',
+          muted: '#64748b',
+          subtle: '#94a3b8',
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       maxWidth: {
-        'chat': '760px',
+        'chat': '780px',
+      },
+      boxShadow: {
+        'gemini': '0 8px 30px -4px rgba(12, 74, 110, 0.08), 0 4px 12px -2px rgba(12, 74, 110, 0.04)',
+        'gemini-sm': '0 2px 8px -1px rgba(12, 74, 110, 0.06)',
       },
     },
   },

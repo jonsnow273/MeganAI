@@ -68,21 +68,26 @@ export function MacrosView() {
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-2">
-          <Zap className="w-6 h-6 text-amber-400" />
-          <h1 className="text-2xl font-semibold text-dark-text">Workflow Macros</h1>
+          <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-sm">
+            <Zap className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Workflow Macros</h1>
+            <p className="text-xs text-slate-500 font-medium">Desktop automation chains and hotkey sequences</p>
+          </div>
         </div>
 
-        <p className="text-sm text-dark-muted mb-6 max-w-2xl">
+        <p className="text-sm text-slate-600 mb-6 max-w-2xl leading-relaxed">
           Automate multi-step desktop workflows. Chain app launches, URL navigations, hotkeys, and shell commands into single-click or natural-language triggers.
         </p>
 
         {/* How to Use Guide */}
-        <div className="mb-6 p-4 rounded-xl bg-dark-surface/60 border border-dark-border text-xs text-dark-muted space-y-2">
-          <div className="flex items-center gap-2 font-medium text-dark-text">
-            <HelpCircle className="w-4 h-4 text-amber-400" />
+        <div className="mb-6 p-5 rounded-2xl bg-white/80 border border-sky-150 text-xs text-slate-600 shadow-sm space-y-2.5">
+          <div className="flex items-center gap-2 font-semibold text-slate-800">
+            <HelpCircle className="w-4 h-4 text-amber-600" />
             <span>How to use Workflow Macros:</span>
           </div>
-          <ul className="list-disc list-inside space-y-1 pl-1">
+          <ul className="list-disc list-inside space-y-1.5 pl-1 text-slate-600">
             <li><strong>Execute Workflow:</strong> Click &ldquo;Run&rdquo; on any macro below to run its full sequence on your desktop.</li>
             <li><strong>Action Sequences:</strong> Macros can launch applications (VS Code, Chrome, Terminal), open URLs, press hotkeys, and run scripts.</li>
             <li><strong>Safe Execution:</strong> Dangerous commands are prevented in Safe Mode, and you can simulate workflows in Dry Run mode before executing.</li>
@@ -95,7 +100,7 @@ export function MacrosView() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setModalOpen(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition-colors shadow-md shadow-amber-600/20"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition-all shadow-sm shadow-amber-600/20 active:scale-[0.99]"
             >
               <Zap className="w-4 h-4" />
               <span>Open Macro Studio & Recorder</span>
@@ -103,14 +108,14 @@ export function MacrosView() {
             <button
               onClick={fetchMacros}
               disabled={loading}
-              className="p-2.5 rounded-xl bg-dark-surface border border-dark-border text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
+              className="p-2.5 rounded-xl bg-white border border-sky-200 text-slate-500 hover:text-slate-800 hover:bg-sky-50 transition-colors"
               title="Refresh macros"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </button>
           </div>
 
-          <span className="text-xs text-dark-muted font-medium">
+          <span className="text-xs text-slate-500 font-medium">
             {macros.length} {macros.length === 1 ? "Macro" : "Macros"} Available
           </span>
         </div>
@@ -118,19 +123,19 @@ export function MacrosView() {
         {/* Run Banner */}
         {runResult && (
           <div
-            className={`mb-6 p-4 rounded-xl border text-xs flex items-center justify-between animate-fade-in ${
+            className={`mb-6 p-4 rounded-2xl border text-xs flex items-center justify-between animate-fade-in ${
               runResult.success
-                ? "bg-emerald-950/40 border-emerald-500/30 text-emerald-300"
-                : "bg-red-950/40 border-red-500/30 text-red-300"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-red-50 border-red-200 text-red-800"
             }`}
           >
             <div className="flex items-center gap-2">
               {runResult.success ? (
-                <Check className="w-4 h-4 text-emerald-400" />
+                <Check className="w-4 h-4 text-emerald-600" />
               ) : (
-                <AlertCircle className="w-4 h-4 text-red-400" />
+                <AlertCircle className="w-4 h-4 text-red-600" />
               )}
-              <span>
+              <span className="font-medium">
                 Macro executed: {runResult.steps_executed}/{runResult.steps_total} steps in {runResult.duration_seconds}s
               </span>
             </div>
@@ -144,7 +149,7 @@ export function MacrosView() {
         )}
 
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs">
+          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs">
             {error}
           </div>
         )}
@@ -152,13 +157,13 @@ export function MacrosView() {
         {/* Macro Cards List */}
         <div className="space-y-3 mb-6">
           {macros.length === 0 ? (
-            <div className="p-8 text-center rounded-xl border border-dashed border-dark-border bg-dark-surface/40 text-xs text-dark-muted">
-              <Layers className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="font-medium text-dark-text mb-1">No macros found yet</p>
+            <div className="p-8 text-center rounded-2xl border border-dashed border-sky-200 bg-white/60 text-xs text-slate-500">
+              <Layers className="w-8 h-8 mx-auto mb-2 opacity-40 text-slate-400" />
+              <p className="font-semibold text-slate-800 mb-1">No macros found yet</p>
               <p className="mb-4">Create your first automated desktop macro in the Macro Studio.</p>
               <button
                 onClick={() => setModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Create New Macro</span>
@@ -170,24 +175,24 @@ export function MacrosView() {
               return (
                 <div
                   key={m.id}
-                  className="p-4 rounded-xl bg-dark-surface border border-dark-border hover:border-amber-500/40 transition-colors flex items-center justify-between gap-4"
+                  className="p-5 rounded-2xl bg-white border border-sky-150 shadow-sm hover:border-amber-300 transition-colors flex items-center justify-between gap-4"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2.5 mb-1">
-                      <Zap className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                      <h2 className="text-sm font-semibold text-dark-text truncate">
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <Zap className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                      <h2 className="text-sm font-bold text-slate-900 truncate">
                         {m.name}
                       </h2>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-dark-bg border border-dark-border text-dark-muted">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-sky-50 border border-sky-200 text-sky-800 font-medium">
                         {m.steps?.length || 0} steps
                       </span>
                     </div>
 
-                    <p className="text-xs text-dark-muted truncate">
+                    <p className="text-xs text-slate-500 truncate">
                       {m.description || "No description provided."}
                     </p>
 
-                    <div className="flex items-center gap-4 text-[10px] text-dark-muted mt-2 pt-2 border-t border-dark-border/50">
+                    <div className="flex items-center gap-4 text-[10px] text-slate-400 mt-2.5 pt-2 border-t border-slate-100">
                       <span>Total Runs: {m.run_count || 0}</span>
                       {m.last_run && (
                         <span>Last Run: {new Date(m.last_run).toLocaleDateString()}</span>
@@ -199,7 +204,7 @@ export function MacrosView() {
                     <button
                       onClick={() => handleRun(m.id)}
                       disabled={isRunning || !m.steps || m.steps.length === 0}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition-colors disabled:opacity-50 shadow-sm"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition-all disabled:opacity-50 shadow-sm active:scale-[0.99]"
                     >
                       <Play className={`w-3.5 h-3.5 fill-current ${isRunning ? "animate-spin" : ""}`} />
                       <span>{isRunning ? "Running..." : "Run"}</span>

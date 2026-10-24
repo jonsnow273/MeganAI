@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────
-   Minimal ChatGPT-style theme
-   Plain dark background, no colors/gradients
+   Light Blue Gradient Theme (Gemini Style)
+   Soft, airy ice-blue gradient with dark slate text
    ───────────────────────────────────────── */
 
 * {
@@ -14,33 +14,35 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #0d0d0d;
-  color: #ececec;
+  background: linear-gradient(135deg, #f8fbff 0%, #ebf4fe 45%, #e2effe 100%);
+  background-attachment: fixed;
+  color: #0f172a;
   -webkit-font-smoothing: antialiased;
   margin: 0;
   padding: 0;
+  min-height: 100vh;
 }
 
-/* ── Scrollbar ── */
+/* ── Scrollbars ── */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
-  border-radius: 2px;
+  background: #cbd5e1;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3a;
+  background: #94a3b8;
 }
 
 /* ── Selection ── */
 ::selection {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: #bae6fd;
+  color: #0369a1;
 }
 
 /* ── Focus reset ── */
@@ -50,12 +52,37 @@ button:focus {
   outline: none;
 }
 
-/* ── Fade in animation ── */
+/* ── Fade in animations ── */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
 }
 
 .fade-in {
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Glassmorphism helper ── */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(225, 239, 254, 0.9);
+}
+
+.glass-panel-elevated {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(219, 234, 254, 0.9);
+  box-shadow: 0 10px 30px -4px rgba(12, 74, 110, 0.08);
 }
