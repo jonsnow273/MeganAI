@@ -140,6 +140,9 @@ async def chat_websocket(ws: WebSocket):
                     })
                     continue
 
+                from llm.gateway_client import GatewayClient
+                response = GatewayClient._sanitize_response(response)
+
                 history.add("assistant", response)
 
                 await ws.send_json({

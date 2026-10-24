@@ -9,22 +9,47 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Plain dark greys — no accent colors
+        // Carbon Matte & Sunset Coral Theme
+        carbon: {
+          bg: '#09090b',
+          sidebar: '#0d0d10',
+          card: '#121216',
+          surface: '#18181c',
+          hover: '#222227',
+          border: '#27272d',
+          borderLight: '#35353c',
+          text: '#f4f4f6',
+          muted: '#a1a1aa',
+          subtle: '#71717a',
+        },
+        coral: {
+          300: '#fda4af',
+          400: '#fb7185',
+          500: '#f43f5e',
+          600: '#e11d48',
+          700: '#be123c',
+        },
+        // Backwards-compatible mappings for dark
         dark: {
-          bg: '#0d0d0d',
-          surface: '#171717',
-          border: '#2a2a2a',
-          hover: '#202020',
-          text: '#ececec',
-          muted: '#8e8e8e',
-          subtle: '#565656',
+          bg: '#09090b',
+          surface: '#121216',
+          border: '#27272d',
+          hover: '#1c1c22',
+          text: '#f4f4f6',
+          muted: '#a1a1aa',
+          subtle: '#71717a',
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       maxWidth: {
-        'chat': '760px',
+        'chat': '780px',
+      },
+      boxShadow: {
+        'coral-glow': '0 0 25px -4px rgba(244, 63, 94, 0.25)',
+        'coral-glow-sm': '0 0 15px -2px rgba(244, 63, 94, 0.20)',
+        'carbon-card': '0 4px 20px -2px rgba(0, 0, 0, 0.45)',
       },
     },
   },

@@ -5,7 +5,9 @@ Supports text generation, streaming, multimodal vision (screenshots), and model 
 """
 
 import os
+import re
 import json
+import time
 import base64
 import urllib.request
 import urllib.error
@@ -21,6 +23,12 @@ class GatewayClient:
     and multimodal screenshot payloads.
     """
 
+    FALLBACK_MODELS = [
+        "nvidia/nemotron-3.5-lightning:free",
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "openrouter/free",
+    ]
+
     def __init__(
         self,
         base_url: Optional[str] = None,
@@ -32,7 +40,7 @@ class GatewayClient:
         self.api_key = api_key or os.getenv("KILO_API_KEY") or os.getenv("GATEWAY_API_KEY") or ""
         self.default_model = default_model or os.getenv("DEFAULT_MODEL") or "kilo-auto/free"
         self.vision_model = vision_model or os.getenv("VISION_MODEL") or "nvidia/nemotron-3.5-super-vl:free"
-        self.timeout = 45
+        self.timeout = 35
 
     def _get_headers(self) -> Dict[str, str]:
         headers = {
@@ -42,6 +50,32 @@ class GatewayClient:
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
         return headers
+
+    @staticmethod
+    def _sanitize_response(text: str) -> str:
+        """
+        Sanitize model output to remove any internal model identity leaks or pre-training artifacts.
+        """
+        if not text:
+            return ""
+        cleaned = re.sub(
+            r"I'?m Glyph Cluster,?\s*(and\s+)?(those\s+details\s+have\s+not\s+been\s+announced\s+yet\.?)?\s*",
+            "I'm Megan, your desktop AI assistant. ",
+            text,
+            flags=re.IGNORECASE,
+        )
+        cleaned = re.sub(
+            r"I am Glyph Cluster,?\s*(and\s+)?(those\s+details\s+have\s+not\s+been\s+announced\s+yet\.?)?\s*",
+            "I am Megan, your desktop AI assistant. ",
+            cleaned,
+            flags=re.IGNORECASE,
+        )
+        cleaned = re.sub(r"\bGlyph Cluster\b", "Megan", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\bGlyph\b", "Megan", cleaned)
+        cleaned = re.sub(r"(and\s+)?those details have not been announced yet\.?\s*", "", cleaned, flags=re.IGNORECASE)
+        # Strip thinking trace leaks if returned in raw text
+        cleaned = re.sub(r"^Here's a thinking process:.*?\n\n", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+        return cleaned.strip()
 
     def chat(
         self,
@@ -53,49 +87,64 @@ class GatewayClient:
     ) -> str:
         """
         Send a chat completion request and return the string response.
-        Extracts content or reasoning tokens if content is empty.
+        Includes automatic retry and fallback to secondary models on 503/429 errors.
         """
-        target_model = model or self.default_model
-        endpoint = f"{self.base_url}/chat/completions"
+        primary_model = model or self.default_model
+        candidate_models = [primary_model] + [m for m in self.FALLBACK_MODELS if m != primary_model]
 
-        payload = {
-            "model": target_model,
-            "messages": messages,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-            "top_p": top_p,
-        }
+        last_error = None
+        for target_model in candidate_models:
+            endpoint = f"{self.base_url}/chat/completions"
+            payload = {
+                "model": target_model,
+                "messages": messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "top_p": top_p,
+            }
 
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(endpoint, data=data, headers=self._get_headers())
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(endpoint, data=data, headers=self._get_headers())
 
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as response:
-                result = json.loads(response.read().decode("utf-8"))
-                choice = result.get("choices", [{}])[0]
-                msg = choice.get("message", {})
-                
-                content = msg.get("content")
-                if content:
-                    return content.strip()
+            for attempt in range(2):
+                try:
+                    with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                        result = json.loads(response.read().decode("utf-8"))
+                        choice = result.get("choices", [{}])[0]
+                        msg = choice.get("message", {})
 
-                # Fallback to reasoning text if model put output there
-                reasoning = msg.get("reasoning")
-                if reasoning:
-                    return reasoning.strip()
+                        content = msg.get("content")
+                        if content:
+                            return self._sanitize_response(content.strip())
 
-                return ""
-        except urllib.error.HTTPError as e:
-            err_body = ""
-            try:
-                err_body = e.read().decode("utf-8")
-            except Exception:
-                pass
-            logger.error(f"Gateway HTTP error {e.code}: {e.reason} | {err_body}")
-            raise RuntimeError(f"Gateway API error ({e.code}): {e.reason}") from e
-        except Exception as e:
-            logger.error(f"Gateway connection error: {e}")
-            raise RuntimeError(f"Failed to communicate with LLM gateway: {e}") from e
+                        reasoning = msg.get("reasoning")
+                        if reasoning:
+                            return self._sanitize_response(reasoning.strip())
+
+                        return ""
+                except urllib.error.HTTPError as e:
+                    err_body = ""
+                    try:
+                        err_body = e.read().decode("utf-8")
+                    except Exception:
+                        pass
+                    last_error = f"Gateway HTTP error {e.code}: {e.reason} ({target_model})"
+                    logger.warning(f"{last_error} | {err_body}")
+
+                    # Retry on temporary server errors (503, 502, 504, 429)
+                    if e.code in (503, 502, 504, 429) and attempt == 0:
+                        time.sleep(1.2)
+                        continue
+                    break  # Try next candidate model
+                except Exception as e:
+                    last_error = f"Gateway connection error: {e} ({target_model})"
+                    logger.warning(last_error)
+                    if attempt == 0:
+                        time.sleep(1.0)
+                        continue
+                    break
+
+        raise RuntimeError(last_error or "All gateway models failed.")
 
     def chat_stream(
         self,
@@ -107,89 +156,79 @@ class GatewayClient:
     ) -> Generator[str, None, None]:
         """
         Stream a chat completion, yielding content deltas as they arrive.
-
-        Parses OpenAI-compatible Server-Sent Events. Falls back to a single
-        non-streaming request when the gateway rejects streaming or when the
-        connection fails before any token was produced.
+        Falls back to alternative models or non-streaming if interrupted.
         """
-        target_model = model or self.default_model
-        endpoint = f"{self.base_url}/chat/completions"
+        primary_model = model or self.default_model
+        candidate_models = [primary_model] + [m for m in self.FALLBACK_MODELS if m != primary_model]
 
-        payload = {
-            "model": target_model,
-            "messages": messages,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-            "top_p": top_p,
-            "stream": True,
-        }
+        for target_model in candidate_models:
+            endpoint = f"{self.base_url}/chat/completions"
+            payload = {
+                "model": target_model,
+                "messages": messages,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "top_p": top_p,
+                "stream": True,
+            }
 
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(endpoint, data=data, headers=self._get_headers())
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(endpoint, data=data, headers=self._get_headers())
 
-        yielded_any = False
-        reasoning_parts: List[str] = []
+            yielded_any = False
+            reasoning_parts: List[str] = []
 
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as response:
-                for raw_line in response:
-                    line = raw_line.decode("utf-8", errors="replace").strip()
-                    if not line or not line.startswith("data:"):
-                        continue
-
-                    event_data = line[len("data:"):].strip()
-                    if not event_data:
-                        continue
-                    if event_data == "[DONE]":
-                        break
-
-                    try:
-                        event = json.loads(event_data)
-                    except json.JSONDecodeError:
-                        continue
-
-                    if event.get("error"):
-                        error = event["error"]
-                        detail = error.get("message") if isinstance(error, dict) else str(error)
-                        raise RuntimeError(f"Gateway stream error: {detail}")
-
-                    choices = event.get("choices") or []
-                    if not choices:
-                        continue
-
-                    delta = choices[0].get("delta") or {}
-                    content = delta.get("content")
-                    if content:
-                        yielded_any = True
-                        yield content
-                        continue
-
-                    reasoning = delta.get("reasoning") or delta.get("reasoning_content")
-                    if reasoning:
-                        reasoning_parts.append(reasoning)
-
-        except urllib.error.HTTPError as e:
-            err_body = ""
             try:
-                err_body = e.read().decode("utf-8")
-            except Exception:
-                pass
-            logger.warning(f"Gateway streaming error {e.code}: {e.reason} | {err_body}")
-            if yielded_any:
-                raise RuntimeError(f"Streaming interrupted: {e.reason}") from e
-            yield from self._fallback_stream(messages, target_model, max_tokens, temperature)
-            return
-        except RuntimeError:
-            raise
-        except Exception as e:
-            logger.warning(f"Gateway streaming connection error: {e}")
-            if yielded_any:
-                raise RuntimeError(f"Streaming interrupted: {e}") from e
-            yield from self._fallback_stream(messages, target_model, max_tokens, temperature)
-            return
+                with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                    for raw_line in response:
+                        line = raw_line.decode("utf-8", errors="replace").strip()
+                        if not line or not line.startswith("data:"):
+                            continue
 
-        if not yielded_any and reasoning_parts:
-            yield "".join(reasoning_parts)
+                        event_data = line[len("data:"):].strip()
+                        if not event_data or event_data == "[DONE]":
+                            break
+
+                        try:
+                            event = json.loads(event_data)
+                        except json.JSONDecodeError:
+                            continue
+
+                        if event.get("error"):
+                            raise RuntimeError(str(event["error"]))
+
+                        choices = event.get("choices") or []
+                        if not choices:
+                            continue
+
+                        delta = choices[0].get("delta") or {}
+                        content = delta.get("content")
+                        if content:
+                            yielded_any = True
+                            # Clean known identity leaks from token streams
+                            yield content.replace("Glyph Cluster", "Megan").replace("Glyph", "Megan")
+                            continue
+
+                        reasoning = delta.get("reasoning") or delta.get("reasoning_content")
+                        if reasoning:
+                            reasoning_parts.append(reasoning)
+
+                if yielded_any:
+                    return
+
+                if reasoning_parts:
+                    cleaned_reasoning = self._sanitize_response("".join(reasoning_parts))
+                    yield cleaned_reasoning
+                    return
+
+            except Exception as e:
+                logger.warning(f"Streaming failed for model '{target_model}': {e}")
+                if yielded_any:
+                    return
+                # Continue loop to next candidate model
+
+        # Final fallback: synchronous chat call
+        yield from self._fallback_stream(messages, self.default_model, max_tokens, temperature)
 
     def _fallback_stream(
         self,
@@ -199,14 +238,18 @@ class GatewayClient:
         temperature: float,
     ) -> Generator[str, None, None]:
         """Yield a non-streaming completion as a single chunk."""
-        text = self.chat(
-            messages=messages,
-            model=model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-        )
-        if text:
-            yield text
+        try:
+            text = self.chat(
+                messages=messages,
+                model=model,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+            if text:
+                yield text
+        except Exception as e:
+            logger.error(f"Fallback generation error: {e}")
+            yield f"I was unable to complete the request right now: {e}"
 
     def chat_with_vision(
         self,

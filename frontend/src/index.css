@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────
-   Minimal ChatGPT-style theme
-   Plain dark background, no colors/gradients
+   Theme: Carbon Matte & Sunset Coral / Crimson
+   Sleek, high-contrast, modern Linear-style aesthetic
    ───────────────────────────────────────── */
 
 * {
@@ -14,33 +14,34 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #0d0d0d;
-  color: #ececec;
+  background-color: #09090b;
+  color: #f4f4f6;
   -webkit-font-smoothing: antialiased;
   margin: 0;
   padding: 0;
+  min-height: 100vh;
 }
 
-/* ── Scrollbar ── */
+/* ── Scrollbars ── */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
-  border-radius: 2px;
+  background: #27272e;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3a;
+  background: #3f3f46;
 }
 
 /* ── Selection ── */
 ::selection {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: rgba(244, 63, 94, 0.3);
+  color: #ffffff;
 }
 
 /* ── Focus reset ── */
@@ -50,12 +51,32 @@ button:focus {
   outline: none;
 }
 
-/* ── Fade in animation ── */
+/* ── Animations ── */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .fade-in {
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Carbon Glass Panels ── */
+.carbon-panel {
+  background: rgba(18, 18, 22, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid #27272e;
+}
+
+.carbon-panel-elevated {
+  background: rgba(24, 24, 28, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #35353c;
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.6);
 }

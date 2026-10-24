@@ -1,64 +1,80 @@
 import { useState, useCallback, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, PanelLeftOpen } from "lucide-react";
 import { useChat } from "./hooks/useChat";
-import { Header } from "./components/Layout/Header";
 import { Sidebar } from "./components/Layout/Sidebar";
-import { ChatWindow } from "./components/Chat/ChatWindow";
-import { InputBar } from "./components/Chat/InputBar";
+import { ChatArea } from "./components/Chat/ChatArea";
 import { ScreenCopilotView } from "./components/Features/ScreenCopilotView";
 import { TimeMachineView } from "./components/Features/TimeMachineView";
 import { StandupView } from "./components/Features/StandupView";
 import { MacrosView } from "./components/Features/MacrosView";
+import { AuthModal } from "./components/Auth/AuthModal";
 
 type View = "chat" | "copilot" | "timemachine" | "standup" | "macros";
 
 const API = "http://localhost:8000";
 
-function generateTitle(firstMessage: string): string {
-  if (!firstMessage || firstMessage.trim().length === 0) return "New conversation";
-  const cleaned = firstMessage.trim().slice(0, 60);
-  return cleaned.length < firstMessage.trim().length ? `${cleaned}...` : cleaned;
+function getAuthHeader(): Record<string, string> {
+  const token = localStorage.getItem("megan_token");
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+  return {};
 }
 
 export default function App() {
-  const { messages, loading, error, sessionId, sendMessage, clearChat } = useChat();
+  const { messages, loading, error, sessionId, sendMessage, clearChat, loadSession } = useChat();
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentView, setCurrentView] = useState<View>("chat");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ username: string; display_name?: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem("megan_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
-  // Derive conversation title from first user message
-  const conversationTitle = messages.length > 0 && messages[0].role === "user"
-    ? generateTitle(messages[0].content)
-    : undefined;
-
-  // New Chat handler — creates fresh session and returns to chat view
+  // New Chat handler
   const handleNewChat = useCallback(() => {
     clearChat();
     setCurrentView("chat");
     setMobileMenuOpen(false);
   }, [clearChat]);
 
-  // Select session — load messages for that session (placeholder, needs backend support)
+  // Select session
   const handleSelectSession = useCallback(async (sid: string) => {
     setCurrentView("chat");
     setMobileMenuOpen(false);
     try {
-      const res = await fetch(`${API}/api/chat/sessions/${sid}/messages`);
+      const res = await fetch(`${API}/api/chat/history/${sid}`, {
+        headers: getAuthHeader(),
+      });
       if (res.ok) {
-        // Load session messages — requires useChat to expose a loadSession method
-        await res.json();
+        const data = await res.json();
+        if (Array.isArray(data.messages)) {
+          loadSession(sid, data.messages);
+        }
       }
-    } catch {
-      // silent
+    } catch (err) {
+      console.warn("Failed to load session:", err);
     }
-  }, []);
+  }, [loadSession]);
 
   // Navigate to feature view
   const handleNavigate = useCallback((view: View) => {
     setCurrentView(view);
     setMobileMenuOpen(false);
   }, []);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("megan_token");
+    localStorage.removeItem("megan_user");
+    setCurrentUser(null);
+    clearChat();
+  }, [clearChat]);
 
   // Close mobile menu when clicking overlay
   useEffect(() => {
@@ -73,7 +89,7 @@ export default function App() {
   }, [mobileMenuOpen]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-dark-bg text-dark-text">
+    <div className="flex h-screen overflow-hidden bg-[#09090b] text-[#f4f4f6]">
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar
@@ -84,6 +100,9 @@ export default function App() {
           onNewChat={handleNewChat}
           onSelectSession={handleSelectSession}
           onNavigate={handleNavigate}
+          currentUser={currentUser}
+          onOpenAuth={() => setAuthModalOpen(true)}
+          onLogout={handleLogout}
         />
       </div>
 
@@ -91,14 +110,14 @@ export default function App() {
       {mobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden animate-fade-in"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-64 bg-dark-surface z-50 md:hidden">
-            <div className="absolute top-3 right-3">
+          <div className="fixed inset-y-0 left-0 w-64 bg-[#0d0d10] z-50 md:hidden shadow-2xl border-r border-[#27272e]">
+            <div className="absolute top-3 right-3 z-10">
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-dark-muted hover:text-dark-text hover:bg-dark-hover transition-colors"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
                 aria-label="Close menu"
               >
                 <X className="w-5 h-5" />
@@ -112,44 +131,54 @@ export default function App() {
               onNewChat={handleNewChat}
               onSelectSession={handleSelectSession}
               onNavigate={handleNavigate}
+              currentUser={currentUser}
+              onOpenAuth={() => setAuthModalOpen(true)}
+              onLogout={handleLogout}
             />
           </div>
         </>
       )}
 
-      {/* Main Column */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        {/* Header */}
-        <Header
-          sidebarCollapsed={sidebarCollapsed}
-          onToggleSidebar={() => {
-            if (window.innerWidth < 768) {
-              setMobileMenuOpen((v) => !v);
-            } else {
-              setSidebarCollapsed((v) => !v);
-            }
-          }}
-          title={currentView === "chat" ? conversationTitle : undefined}
-        />
+      {/* Main Canvas Area (No top header bar) */}
+      <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden bg-[#09090b]">
+        {/* Mobile floating toggle */}
+        <div className="md:hidden absolute top-3 left-3 z-20">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="w-8 h-8 rounded-lg bg-[#141418] border border-[#27272e] flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+            aria-label="Open menu"
+          >
+            <PanelLeftOpen className="w-4 h-4" />
+          </button>
+        </div>
 
-        {/* View Router */}
-        {currentView === "chat" && (
-          <>
-            <ChatWindow messages={messages} loading={loading} />
-            {error && (
-              <div className="mx-4 mb-2 px-4 py-2 rounded-lg bg-dark-surface border border-dark-border text-dark-muted text-xs">
-                {error}
-              </div>
-            )}
-            <InputBar onSend={sendMessage} disabled={loading} />
-          </>
-        )}
+        {/* Persistent Chat Area: Preserved when switching tabs */}
+        <div className={currentView === "chat" ? "flex flex-col flex-1 min-h-0 overflow-hidden" : "hidden"}>
+          <ChatArea
+            messages={messages}
+            loading={loading}
+            error={error}
+            onSend={sendMessage}
+            currentUser={currentUser}
+          />
+        </div>
 
+        {/* Feature Views */}
         {currentView === "copilot" && <ScreenCopilotView />}
         {currentView === "timemachine" && <TimeMachineView />}
         {currentView === "standup" && <StandupView />}
         {currentView === "macros" && <MacrosView />}
       </div>
+
+      {/* User Account / Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={(user) => {
+          setCurrentUser(user);
+          handleNewChat();
+        }}
+      />
     </div>
   );
 }
