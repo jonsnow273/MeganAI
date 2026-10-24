@@ -1,7 +1,7 @@
 """
 Chat REST API routes for Megan.
-Handles streaming message responses, multimodal image inputs,
-session management, and per-user conversation storage isolation.
+Handles streaming message responses, automated PC command execution,
+multimodal image inputs, session management, and per-user storage isolation.
 """
 
 import json
@@ -14,6 +14,7 @@ from fastapi.responses import StreamingResponse
 from api.schemas.chat import ChatMessageRequest, ChatMessageResponse, SessionInfo
 from auth.models import User
 from auth.middleware import get_current_user
+from automation.dispatcher import AutomationDispatcher
 from core import logger
 from core.constants import DATA_DIR, CONVERSATIONS_DIR
 from llm.gateway_client import GatewayClient
@@ -42,7 +43,7 @@ def _get_user_storage(user: Optional[User]) -> Optional[Path]:
 
 @router.post("/message", response_model=ChatMessageResponse)
 async def send_message(req: ChatMessageRequest, user: Optional[User] = Depends(get_current_user)):
-    """Send a message and get a full response (supports text and base64 images)."""
+    """Send a message and get a full response (executes PC actions or chats)."""
     from chatbot import new_session, resume_session, load_system_prompt
     from core.copilot_service import copilot_service
 
@@ -71,7 +72,19 @@ async def send_message(req: ChatMessageRequest, user: Optional[User] = Depends(g
                 "Never refer to yourself as Glyph Cluster, Glyph, or any other entity."
             )
 
-    # Handle image attachment if provided
+    # 1. Check for Desktop Automation Action Dispatch
+    action_result = AutomationDispatcher.try_dispatch(req.message)
+    if action_result:
+        history.add("user", req.message)
+        response_text = action_result.get("message", "Action completed.")
+        history.add("assistant", response_text)
+        return ChatMessageResponse(
+            response=response_text,
+            session_id=history.session_id,
+            steering_active=None,
+        )
+
+    # 2. Handle image attachment if provided
     if req.image_base64:
         clean_b64 = req.image_base64
         if clean_b64.startswith("data:"):
@@ -88,6 +101,7 @@ async def send_message(req: ChatMessageRequest, user: Optional[User] = Depends(g
             logger.error(f"Multimodal vision generation error: {e}")
             response_text = f"An error occurred while analyzing the attached media: {e}"
     else:
+        # 3. Standard Conversational Chat
         history.add("user", req.message)
         messages = history.to_llm_format()
 
@@ -116,7 +130,7 @@ async def send_message(req: ChatMessageRequest, user: Optional[User] = Depends(g
 async def stream_chat(req: ChatMessageRequest, user: Optional[User] = Depends(get_current_user)):
     """
     Stream message response token-by-token using Server-Sent Events (SSE).
-    Provides instant Time-To-First-Token and zero latency delay.
+    Intercepts PC automation commands for instant OS execution.
     """
     from chatbot import new_session, resume_session, load_system_prompt
     from core.copilot_service import copilot_service
@@ -145,7 +159,20 @@ async def stream_chat(req: ChatMessageRequest, user: Optional[User] = Depends(ge
                 "Never refer to yourself as Glyph Cluster, Glyph, or any other entity."
             )
 
-    # Handle image attachment with direct vision completion
+    # 1. Desktop Automation Action Check
+    action_result = AutomationDispatcher.try_dispatch(req.message)
+    if action_result:
+        history.add("user", req.message)
+        response_text = action_result.get("message", "Action completed.")
+        history.add("assistant", response_text)
+
+        def action_event():
+            yield f"data: {json.dumps({'type': 'token', 'content': response_text})}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'session_id': history.session_id, 'content': response_text})}\n\n"
+
+        return StreamingResponse(action_event(), media_type="text/event-stream")
+
+    # 2. Image Attachment Check
     if req.image_base64:
         clean_b64 = req.image_base64
         if clean_b64.startswith("data:"):
@@ -171,6 +198,7 @@ async def stream_chat(req: ChatMessageRequest, user: Optional[User] = Depends(ge
 
         return StreamingResponse(single_event(), media_type="text/event-stream")
 
+    # 3. Standard Stream Generation
     history.add("user", req.message)
     messages = history.to_llm_format()
 
