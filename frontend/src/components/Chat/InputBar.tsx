@@ -64,7 +64,7 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 180)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [text]);
 
   // Focus on enable
@@ -140,8 +140,8 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
   };
 
   return (
-    <div className={`w-full flex flex-col items-center transition-all duration-500 ${isCentered ? "py-2" : "py-3"}`}>
-      <div className="w-full max-w-3xl">
+    <div className={`w-full flex flex-col items-center transition-all duration-300 ${isCentered ? "py-1" : "py-2"}`}>
+      <div className="w-full max-w-xl">
         {/* Hidden file input */}
         <input
           type="file"
@@ -153,24 +153,24 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
 
         {/* Media Preview Card */}
         {attachment && (
-          <div className="mb-2 p-2.5 bg-[#141418] border border-[#27272e] rounded-2xl flex items-center justify-between gap-3 shadow-sm animate-fade-in">
-            <div className="flex items-center gap-3 min-w-0">
+          <div className="mb-2 p-2 bg-[#141418] border border-[#27272e] rounded-xl flex items-center justify-between gap-3 shadow-sm animate-fade-in">
+            <div className="flex items-center gap-2.5 min-w-0">
               {attachment.type === "image" ? (
                 <img
                   src={attachment.preview}
                   alt="Attachment preview"
-                  className="w-12 h-12 rounded-xl object-cover border border-[#27272e]"
+                  className="w-10 h-10 rounded-lg object-cover border border-[#27272e]"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-xl bg-zinc-900 flex items-center justify-center border border-[#27272e] text-rose-400">
-                  <Film className="w-6 h-6" />
+                <div className="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center border border-[#27272e] text-rose-400">
+                  <Film className="w-5 h-5" />
                 </div>
               )}
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-zinc-100 truncate">
+                <div className="text-xs font-medium text-zinc-100 truncate">
                   {attachment.file.name}
                 </div>
-                <div className="text-[11px] text-zinc-400">
+                <div className="text-[10px] text-zinc-400">
                   {(attachment.file.size / (1024 * 1024)).toFixed(2)} MB · {attachment.type.toUpperCase()}
                 </div>
               </div>
@@ -178,27 +178,25 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
 
             <button
               onClick={() => setAttachment(null)}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              className="w-6 h-6 rounded-md flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
               title="Remove attachment"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
 
-        {/* Carbon Pill Container */}
-        <div className={`relative flex items-end gap-2 bg-[#121216] border border-[#27272e] rounded-3xl px-4 shadow-carbon-card transition-all duration-300 focus-within:border-rose-500/70 focus-within:ring-2 focus-within:ring-rose-500/15 ${
-          isCentered ? "py-4 text-base" : "py-3"
-        }`}>
+        {/* Rectangular Input Container (Compact & Clean) */}
+        <div className="relative flex items-center gap-2 bg-[#121216] border border-[#27272e] rounded-xl px-3.5 py-2.5 shadow-sm transition-all duration-200 focus-within:border-rose-500/70 focus-within:ring-1 focus-within:ring-rose-500/30">
           {/* Plus / Attach button */}
           <button
             onClick={() => fileInputRef.current?.click()}
             type="button"
-            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-rose-400 hover:bg-[#1a1a20] transition-colors"
+            className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-zinc-400 hover:text-rose-400 hover:bg-[#1a1a20] transition-colors"
             title="Attach image or video"
             aria-label="Attach file"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
           </button>
 
           {/* Textarea */}
@@ -216,38 +214,38 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
             }
             disabled={disabled}
             rows={1}
-            className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 text-sm leading-relaxed resize-none focus:outline-none disabled:opacity-50 max-h-[180px] self-center"
+            className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 text-xs md:text-sm leading-relaxed resize-none focus:outline-none disabled:opacity-50 max-h-[160px]"
           />
 
           {/* Voice Input / Mic button */}
           <button
             onClick={toggleListening}
             type="button"
-            className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+            className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
               isListening
-                ? "text-rose-400 bg-rose-950/60 ring-2 ring-rose-500/50 animate-pulse"
+                ? "text-rose-400 bg-rose-950/60 ring-1 ring-rose-500/50 animate-pulse"
                 : "text-zinc-400 hover:text-rose-400 hover:bg-[#1a1a20]"
             }`}
             title={isListening ? "Stop listening" : "Click to speak"}
             aria-label="Voice input"
           >
-            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
           </button>
 
           {/* Send button */}
           <button
             onClick={handleSend}
             disabled={disabled || (!text.trim() && !attachment)}
-            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-coral-glow-sm"
+            className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white transition-all disabled:opacity-25 disabled:cursor-not-allowed shadow-coral-glow-sm"
             aria-label="Send"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Subtle Disclaimer */}
         {!isCentered && (
-          <p className="text-center text-[11px] text-zinc-500 mt-2">
+          <p className="text-center text-[10px] text-zinc-500 mt-1.5">
             Megan can make mistakes. Verify important code and data.
           </p>
         )}

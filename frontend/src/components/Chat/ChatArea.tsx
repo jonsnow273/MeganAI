@@ -16,10 +16,10 @@ interface Props {
 function TypingIndicator() {
   return (
     <div className="flex items-center gap-3 mb-6 animate-fade-in">
-      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white flex-shrink-0 shadow-sm">
+      <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white flex-shrink-0 shadow-sm">
         <Sparkles className="w-3.5 h-3.5" />
       </div>
-      <div className="p-3.5 rounded-2xl bg-[#141418] border border-[#27272e] shadow-sm flex gap-1.5 items-center">
+      <div className="flex gap-1.5 items-center py-2">
         <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
         <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" style={{ animationDelay: "0.2s" }} />
         <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" style={{ animationDelay: "0.4s" }} />
@@ -57,55 +57,57 @@ export function ChatArea({ messages, loading, error, onSend, currentUser }: Prop
 
   return (
     <div className="relative flex flex-col flex-1 min-h-0 overflow-hidden bg-[#09090b]">
-      {/* ── Empty State: Centered Greeting & Input (Gemini/Linear Style) ── */}
+      {/* ── Empty State: Centered Exactly in the Middle ── */}
       {!hasMessages ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-3xl mx-auto w-full transition-all duration-500 ease-out animate-fade-in">
-          {/* Welcome Headline Matching User Drawing */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 drop-shadow-lg flex items-center justify-center">
-              <img src="/megan-logo.png" alt="Megan" className="w-full h-full object-contain rounded-2xl" />
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 w-full transition-all duration-300 ease-out animate-fade-in -mt-6">
+          <div className="w-full max-w-xl mx-auto flex flex-col items-center text-center">
+            {/* Logo */}
+            <div className="w-12 h-12 mb-3 drop-shadow-md flex items-center justify-center">
+              <img src="/megan-logo.png" alt="Megan" className="w-full h-full object-contain rounded-xl" />
             </div>
-            <h1 className="text-3xl md:text-5xl font-medium tracking-tight text-zinc-100 italic mb-3">
-              welcome back! <span className="bg-gradient-to-r from-rose-400 via-rose-500 to-amber-300 bg-clip-text text-transparent font-semibold not-italic">{displayName}</span>
+
+            {/* Smaller, Clean Typography */}
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-zinc-100 mb-1.5">
+              welcome back, <span className="text-rose-400 font-semibold">{displayName}</span>
             </h1>
-            <p className="text-sm md:text-base text-zinc-400 font-normal max-w-lg mx-auto">
-              How can I assist you with code, screen analysis, or desktop tasks today?
+            <p className="text-xs md:text-sm text-zinc-400 font-normal mb-5 max-w-md">
+              What would you like to explore or automate today?
             </p>
-          </div>
 
-          {/* Centered Input Bar */}
-          <div className="w-full">
-            <InputBar
-              onSend={onSend}
-              disabled={loading}
-              placeholder="type here!"
-              isCentered={true}
-            />
-          </div>
+            {/* Centered Rectangle Input Bar */}
+            <div className="w-full">
+              <InputBar
+                onSend={onSend}
+                disabled={loading}
+                placeholder="type here!"
+                isCentered={true}
+              />
+            </div>
 
-          {/* Quick Prompt Suggestion Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2.5 mt-6 w-full max-w-2xl">
-            {QUICK_PROMPTS.map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => onSend(item.prompt)}
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#141418] hover:bg-[#1a1a20] border border-[#27272e] hover:border-rose-500/40 text-xs font-medium text-zinc-300 hover:text-white shadow-sm transition-all"
-                >
-                  <Icon className="w-3.5 h-3.5 text-rose-400" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+            {/* Quick Prompt Suggestion Pills */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-4 w-full">
+              {QUICK_PROMPTS.map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => onSend(item.prompt)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#141418] hover:bg-[#1a1a20] border border-[#27272e] hover:border-rose-500/40 text-xs font-medium text-zinc-300 hover:text-white shadow-sm transition-all"
+                  >
+                    <Icon className="w-3.5 h-3.5 text-rose-400" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : (
         /* ── Active Conversation View: Message Feed with Docked Input ── */
-        <div className="flex flex-col flex-1 min-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden transition-all duration-300 ease-in-out">
           {/* Messages Scroll Area */}
           <div className="flex-1 overflow-y-auto px-4 py-6">
-            <div className="max-w-chat mx-auto">
+            <div className="max-w-2xl mx-auto">
               {visibleMessages.map((msg) => (
                 <MessageBubble key={msg.id} message={msg} />
               ))}
@@ -118,8 +120,8 @@ export function ChatArea({ messages, loading, error, onSend, currentUser }: Prop
 
           {/* Error Banner */}
           {error && (
-            <div className="max-w-chat mx-auto w-full px-4 mb-2">
-              <div className="px-4 py-2.5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs shadow-sm">
+            <div className="max-w-2xl mx-auto w-full px-4 mb-2">
+              <div className="px-3.5 py-2 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs shadow-sm">
                 {error}
               </div>
             </div>

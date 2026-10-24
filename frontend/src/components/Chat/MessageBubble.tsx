@@ -13,15 +13,15 @@ interface Props {
 }
 
 const PROSE_CLASSES = `prose prose-sm max-w-none text-zinc-200
-  prose-p:my-2.5 prose-p:leading-relaxed prose-p:text-zinc-300
-  prose-headings:text-zinc-100 prose-headings:font-semibold prose-headings:mt-5 prose-headings:mb-2
-  prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
+  prose-p:my-2 prose-p:leading-relaxed prose-p:text-zinc-200 text-sm
+  prose-headings:text-zinc-100 prose-headings:font-semibold prose-headings:mt-4 prose-headings:mb-2
+  prose-h1:text-base prose-h2:text-sm prose-h3:text-xs
   prose-strong:text-zinc-100 prose-strong:font-semibold
   prose-em:text-zinc-400
-  prose-ul:my-2 prose-ul:pl-5 prose-li:my-1 prose-li:text-zinc-300
-  prose-ol:my-2 prose-ol:pl-5 prose-li:my-1 prose-li:text-zinc-300
-  prose-blockquote:border-l-4 prose-blockquote:border-rose-500 prose-blockquote:pl-4 prose-blockquote:text-zinc-400 prose-blockquote:my-3 prose-blockquote:italic
-  prose-code:text-rose-300 prose-code:bg-rose-950/50 prose-code:border prose-code:border-rose-900/40 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono
+  prose-ul:my-2 prose-ul:pl-5 prose-li:my-1 prose-li:text-zinc-200
+  prose-ol:my-2 prose-ol:pl-5 prose-li:my-1 prose-li:text-zinc-200
+  prose-blockquote:border-l-2 prose-blockquote:border-rose-500 prose-blockquote:pl-3 prose-blockquote:text-zinc-400 prose-blockquote:my-2.5 prose-blockquote:italic
+  prose-code:text-rose-300 prose-code:bg-[#18181c] prose-code:border prose-code:border-[#27272e] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono
   prose-code:before:content-none prose-code:after:content-none
   prose-a:text-rose-400 prose-a:underline hover:prose-a:text-rose-300 prose-a:font-medium
   prose-hr:border-[#27272e]`;
@@ -36,7 +36,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#1f1f26] transition-colors"
+      className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c] transition-colors"
       aria-label="Copy"
       title="Copy text"
     >
@@ -47,8 +47,8 @@ function CopyButton({ text }: { text: string }) {
 
 function CodeBlock({ language, code }: { language?: string; code: string }) {
   return (
-    <div className="relative group/code my-3.5 rounded-xl overflow-hidden border border-[#27272e] bg-[#0c0c0f] shadow-sm">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-[#27272e] bg-[#141418]">
+    <div className="relative group/code my-3 rounded-xl overflow-hidden border border-[#27272e] bg-[#0c0c0f] shadow-sm">
+      <div className="flex items-center justify-between px-3.5 py-1.5 border-b border-[#27272e] bg-[#141418]">
         <span className="text-xs text-zinc-400 font-mono uppercase tracking-wide">
           {language || "text"}
         </span>
@@ -70,7 +70,7 @@ function CodeBlock({ language, code }: { language?: string; code: string }) {
           background: "#0c0c0f",
           fontSize: "0.82rem",
           lineHeight: "1.55",
-          padding: "1rem",
+          padding: "0.9rem",
         }}
         codeTagProps={{
           style: { fontFamily: "'JetBrains Mono', 'Fira Code', monospace" },
@@ -108,78 +108,79 @@ export function MessageBubble({ message, onRegenerate }: Props) {
   const isUser = message.role === "user";
 
   if (isUser) {
+    // User message: distinct rectangular chat bubble on the right
     return (
       <div className="flex justify-end mb-4 animate-fade-in">
-        <div className="max-w-[75%] bg-gradient-to-r from-rose-600 to-rose-700 text-white text-sm rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-coral-glow-sm whitespace-pre-wrap leading-relaxed">
+        <div className="max-w-[75%] bg-[#1a1a20] border border-[#27272e] text-zinc-100 text-sm rounded-2xl px-4 py-2.5 shadow-sm whitespace-pre-wrap leading-relaxed">
           {message.content}
         </div>
       </div>
     );
   }
 
+  // Megan Assistant message: ChatGPT style (NO card box, flows naturally on background)
   return (
     <div className="group mb-6 flex gap-3 animate-fade-in">
-      {/* Megan Avatar */}
-      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white flex-shrink-0 mt-0.5 shadow-coral-glow-sm">
+      {/* Megan Avatar Sparkle */}
+      <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white flex-shrink-0 mt-0.5 shadow-coral-glow-sm">
         <Sparkles className="w-3.5 h-3.5" />
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="p-4 rounded-2xl bg-[#121216] border border-[#27272e] shadow-sm">
-          <ReactMarkdown
-            className={PROSE_CLASSES}
-            remarkPlugins={[remarkGfm, remarkBreaks]}
-            components={{
-              pre({ children }) {
-                const child = Array.isArray(children) ? children[0] : children;
-                const { className, children: codeChildren } = elementProps(child);
-                const code = nodeText(codeChildren).replace(/\n$/, "");
-                const match = /language-([\w-]+)/.exec(className || "");
-                return <CodeBlock language={match?.[1]} code={code} />;
-              },
-              a({ children, href }) {
-                return (
-                  <a href={href} target="_blank" rel="noopener noreferrer">
+      <div className="flex-1 min-w-0 pt-0.5">
+        {/* Content rendered directly with NO bounding box */}
+        <ReactMarkdown
+          className={PROSE_CLASSES}
+          remarkPlugins={[remarkGfm, remarkBreaks]}
+          components={{
+            pre({ children }) {
+              const child = Array.isArray(children) ? children[0] : children;
+              const { className, children: codeChildren } = elementProps(child);
+              const code = nodeText(codeChildren).replace(/\n$/, "");
+              const match = /language-([\w-]+)/.exec(className || "");
+              return <CodeBlock language={match?.[1]} code={code} />;
+            },
+            a({ children, href }) {
+              return (
+                <a href={href} target="_blank" rel="noopener noreferrer">
+                  {children}
+                </a>
+              );
+            },
+            table({ children }) {
+              return (
+                <div className="overflow-x-auto my-3">
+                  <table className="w-full text-xs border-collapse border border-[#27272e] rounded-lg overflow-hidden bg-[#141418]">
                     {children}
-                  </a>
-                );
-              },
-              table({ children }) {
-                return (
-                  <div className="overflow-x-auto my-3">
-                    <table className="w-full text-xs border-collapse border border-[#27272e] rounded-lg overflow-hidden bg-[#141418]">
-                      {children}
-                    </table>
-                  </div>
-                );
-              },
-              th({ children }) {
-                return (
-                  <th className="bg-[#1c1c22] border border-[#27272e] px-3 py-2 text-left text-zinc-200 font-semibold">
-                    {children}
-                  </th>
-                );
-              },
-              td({ children }) {
-                return (
-                  <td className="border border-[#27272e] px-3 py-2 text-zinc-300">
-                    {children}
-                  </td>
-                );
-              },
-            }}
-          >
-            {message.content}
-          </ReactMarkdown>
-        </div>
+                  </table>
+                </div>
+              );
+            },
+            th({ children }) {
+              return (
+                <th className="bg-[#1c1c22] border border-[#27272e] px-3 py-2 text-left text-zinc-200 font-semibold">
+                  {children}
+                </th>
+              );
+            },
+            td({ children }) {
+              return (
+                <td className="border border-[#27272e] px-3 py-2 text-zinc-300">
+                  {children}
+                </td>
+              );
+            },
+          }}
+        >
+          {message.content}
+        </ReactMarkdown>
 
         {/* Hover action toolbar */}
-        <div className="flex items-center gap-1 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <CopyButton text={message.content} />
           {onRegenerate && (
             <button
               onClick={onRegenerate}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c] transition-colors"
+              className="p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c] transition-colors"
               aria-label="Regenerate"
               title="Regenerate response"
             >
@@ -187,14 +188,14 @@ export function MessageBubble({ message, onRegenerate }: Props) {
             </button>
           )}
           <button
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c] transition-colors"
+            className="p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c] transition-colors"
             aria-label="Good response"
             title="Good response"
           >
             <ThumbsUp className="w-3.5 h-3.5" />
           </button>
           <button
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c] transition-colors"
+            className="p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c] transition-colors"
             aria-label="Bad response"
             title="Bad response"
           >

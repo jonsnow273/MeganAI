@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, PanelLeftOpen } from "lucide-react";
 import { useChat } from "./hooks/useChat";
-import { Header } from "./components/Layout/Header";
 import { Sidebar } from "./components/Layout/Sidebar";
 import { ChatArea } from "./components/Chat/ChatArea";
 import { ScreenCopilotView } from "./components/Features/ScreenCopilotView";
@@ -13,12 +12,6 @@ import { AuthModal } from "./components/Auth/AuthModal";
 type View = "chat" | "copilot" | "timemachine" | "standup" | "macros";
 
 const API = "http://localhost:8000";
-
-function generateTitle(firstMessage: string): string {
-  if (!firstMessage || firstMessage.trim().length === 0) return "New conversation";
-  const cleaned = firstMessage.trim().slice(0, 50);
-  return cleaned.length < firstMessage.trim().length ? `${cleaned}...` : cleaned;
-}
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem("megan_token");
@@ -43,11 +36,6 @@ export default function App() {
       return null;
     }
   });
-
-  // Derive conversation title from first user message
-  const conversationTitle = messages.length > 0 && messages[0].role === "user"
-    ? generateTitle(messages[0].content)
-    : undefined;
 
   // New Chat handler
   const handleNewChat = useCallback(() => {
@@ -151,20 +139,18 @@ export default function App() {
         </>
       )}
 
-      {/* Main Canvas Area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-[#09090b]">
-        {/* Header */}
-        <Header
-          sidebarCollapsed={sidebarCollapsed}
-          onToggleSidebar={() => {
-            if (window.innerWidth < 768) {
-              setMobileMenuOpen((v) => !v);
-            } else {
-              setSidebarCollapsed((v) => !v);
-            }
-          }}
-          title={currentView === "chat" ? conversationTitle : undefined}
-        />
+      {/* Main Canvas Area (No top header bar) */}
+      <div className="relative flex flex-col flex-1 min-w-0 overflow-hidden bg-[#09090b]">
+        {/* Mobile floating toggle */}
+        <div className="md:hidden absolute top-3 left-3 z-20">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="w-8 h-8 rounded-lg bg-[#141418] border border-[#27272e] flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+            aria-label="Open menu"
+          >
+            <PanelLeftOpen className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Persistent Chat Area: Preserved when switching tabs */}
         <div className={currentView === "chat" ? "flex flex-col flex-1 min-h-0 overflow-hidden" : "hidden"}>
