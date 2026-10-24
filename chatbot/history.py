@@ -1,6 +1,7 @@
 """
 Conversation history manager for Megan.
 Saves and loads message lists as JSON per session.
+Supports per-user storage isolation.
 """
 
 import json
@@ -18,10 +19,12 @@ class ConversationHistory:
     as a JSON file keyed by session ID.
     """
 
-    def __init__(self, session_id: str):
+    def __init__(self, session_id: str, storage_dir: Optional[Path] = None):
         self.session_id = session_id
         self.messages: list[dict] = []
-        self._path = CONVERSATIONS_DIR / f"{session_id}.json"
+        self._dir = Path(storage_dir) if storage_dir else CONVERSATIONS_DIR
+        self._dir.mkdir(parents=True, exist_ok=True)
+        self._path = self._dir / f"{session_id}.json"
 
     def add(self, role: str, content: str) -> None:
         """Append a message and auto-save to disk."""
@@ -73,17 +76,19 @@ class ConversationHistory:
             logger.info(f"Loaded session '{self.session_id}' ({len(self.messages)} messages)")
             return True
         except Exception as e:
-            logger.warning(f"Failed to load session '{self.session_id}': {e}")
+            logger.error(f"Failed to load session '{self.session_id}': {e}")
             return False
 
-    def delete(self) -> None:
+    def delete(self) -> bool:
         """Delete this session's file from disk."""
-        if self._path.exists():
-            self._path.unlink()
-            logger.info(f"Deleted session file: {self._path}")
+        try:
+            if self._path.exists():
+                self._path.unlink()
+                logger.info(f"Deleted session file: {self._path.name}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to delete session file: {e}")
+            return False
 
     def __len__(self) -> int:
         return len(self.messages)
-
-    def __repr__(self) -> str:
-        return f"<ConversationHistory session='{self.session_id}' messages={len(self.messages)}>"

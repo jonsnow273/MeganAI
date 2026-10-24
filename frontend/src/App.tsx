@@ -9,6 +9,7 @@ import { ScreenCopilotView } from "./components/Features/ScreenCopilotView";
 import { TimeMachineView } from "./components/Features/TimeMachineView";
 import { StandupView } from "./components/Features/StandupView";
 import { MacrosView } from "./components/Features/MacrosView";
+import { AuthModal } from "./components/Auth/AuthModal";
 
 type View = "chat" | "copilot" | "timemachine" | "standup" | "macros";
 
@@ -20,12 +21,29 @@ function generateTitle(firstMessage: string): string {
   return cleaned.length < firstMessage.trim().length ? `${cleaned}...` : cleaned;
 }
 
+function getAuthHeader(): Record<string, string> {
+  const token = localStorage.getItem("megan_token");
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+  return {};
+}
+
 export default function App() {
-  const { messages, loading, error, sessionId, sendMessage, clearChat } = useChat();
+  const { messages, loading, error, sessionId, sendMessage, clearChat, loadSession } = useChat();
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentView, setCurrentView] = useState<View>("chat");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ username: string; display_name?: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem("megan_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Derive conversation title from first user message
   const conversationTitle = messages.length > 0 && messages[0].role === "user"
@@ -39,26 +57,37 @@ export default function App() {
     setMobileMenuOpen(false);
   }, [clearChat]);
 
-  // Select session — load messages for that session (placeholder, needs backend support)
+  // Select session — loads message history into active chat view
   const handleSelectSession = useCallback(async (sid: string) => {
     setCurrentView("chat");
     setMobileMenuOpen(false);
     try {
-      const res = await fetch(`${API}/api/chat/sessions/${sid}/messages`);
+      const res = await fetch(`${API}/api/chat/history/${sid}`, {
+        headers: getAuthHeader(),
+      });
       if (res.ok) {
-        // Load session messages — requires useChat to expose a loadSession method
-        await res.json();
+        const data = await res.json();
+        if (Array.isArray(data.messages)) {
+          loadSession(sid, data.messages);
+        }
       }
-    } catch {
-      // silent
+    } catch (err) {
+      console.warn("Failed to load session:", err);
     }
-  }, []);
+  }, [loadSession]);
 
   // Navigate to feature view
   const handleNavigate = useCallback((view: View) => {
     setCurrentView(view);
     setMobileMenuOpen(false);
   }, []);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("megan_token");
+    localStorage.removeItem("megan_user");
+    setCurrentUser(null);
+    clearChat();
+  }, [clearChat]);
 
   // Close mobile menu when clicking overlay
   useEffect(() => {
@@ -84,6 +113,9 @@ export default function App() {
           onNewChat={handleNewChat}
           onSelectSession={handleSelectSession}
           onNavigate={handleNavigate}
+          currentUser={currentUser}
+          onOpenAuth={() => setAuthModalOpen(true)}
+          onLogout={handleLogout}
         />
       </div>
 
@@ -112,6 +144,9 @@ export default function App() {
               onNewChat={handleNewChat}
               onSelectSession={handleSelectSession}
               onNavigate={handleNavigate}
+              currentUser={currentUser}
+              onOpenAuth={() => setAuthModalOpen(true)}
+              onLogout={handleLogout}
             />
           </div>
         </>
@@ -132,24 +167,33 @@ export default function App() {
           title={currentView === "chat" ? conversationTitle : undefined}
         />
 
-        {/* View Router */}
-        {currentView === "chat" && (
-          <>
-            <ChatWindow messages={messages} loading={loading} />
-            {error && (
-              <div className="mx-4 mb-2 px-4 py-2 rounded-lg bg-dark-surface border border-dark-border text-dark-muted text-xs">
-                {error}
-              </div>
-            )}
-            <InputBar onSend={sendMessage} disabled={loading} />
-          </>
-        )}
+        {/* Persistent Chat View: preserved when switching tabs */}
+        <div className={currentView === "chat" ? "flex flex-col flex-1 min-h-0 overflow-hidden" : "hidden"}>
+          <ChatWindow messages={messages} loading={loading} />
+          {error && (
+            <div className="mx-4 mb-2 px-4 py-2 rounded-lg bg-dark-surface border border-dark-border text-red-400 text-xs">
+              {error}
+            </div>
+          )}
+          <InputBar onSend={sendMessage} disabled={loading} />
+        </div>
 
+        {/* Feature Views */}
         {currentView === "copilot" && <ScreenCopilotView />}
         {currentView === "timemachine" && <TimeMachineView />}
         {currentView === "standup" && <StandupView />}
         {currentView === "macros" && <MacrosView />}
       </div>
+
+      {/* User Account / Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={(user) => {
+          setCurrentUser(user);
+          handleNewChat();
+        }}
+      />
     </div>
   );
 }
