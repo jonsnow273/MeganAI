@@ -72,7 +72,36 @@ async def send_message(req: ChatMessageRequest, user: Optional[User] = Depends(g
                 "Never refer to yourself as Glyph Cluster, Glyph, or any other entity."
             )
 
-    # 1. Check for Desktop Automation Action Dispatch
+    # 1. Special Presentation Demo Trigger
+    clean_msg = req.message.strip().lower().rstrip(".!?")
+    if clean_msg in [
+        "hey megan, take over",
+        "hey megan take over",
+        "take over megan",
+        "megan take over",
+        "take over",
+        "megan, take over",
+    ]:
+        presentation_speech = (
+            "Hello everyone, Respected Professor Saste, and fellow engineers! I am Megan, your "
+            "next-generation privacy-first intelligent desktop AI assistant, built by Pranit and Hemant. "
+            "Unlike standard web chatbots that run entirely on external servers and track your telemetry, "
+            "I am engineered with a modern hybrid architecture. My system features local quantized neural "
+            "intelligence, real-time multimodal screen perception, and direct operating system automation. "
+            "Whether it is hands-free workflow execution, automated file organization, or deep contextual "
+            "understanding across your daily desktop workspace, I work right beside you with maximum privacy "
+            "and zero latency. Now, I will hand the stage back to Pranit and Hemant to walk you through our "
+            "technical architecture and core implementation details. Thank you, and over to you, guys!"
+        )
+        history.add("user", req.message)
+        history.add("assistant", presentation_speech)
+        return ChatMessageResponse(
+            response=presentation_speech,
+            session_id=history.session_id,
+            steering_active=None,
+        )
+
+    # 2. Check for Desktop Automation Action Dispatch
     action_result = AutomationDispatcher.try_dispatch(req.message)
     if action_result:
         history.add("user", req.message)
@@ -84,7 +113,7 @@ async def send_message(req: ChatMessageRequest, user: Optional[User] = Depends(g
             steering_active=None,
         )
 
-    # 2. Handle image attachment if provided
+    # 3. Handle image attachment if provided
     if req.image_base64:
         clean_b64 = req.image_base64
         if clean_b64.startswith("data:"):
@@ -159,7 +188,37 @@ async def stream_chat(req: ChatMessageRequest, user: Optional[User] = Depends(ge
                 "Never refer to yourself as Glyph Cluster, Glyph, or any other entity."
             )
 
-    # 1. Desktop Automation Action Check
+    # 1. Special Presentation Demo Trigger
+    clean_msg = req.message.strip().lower().rstrip(".!?")
+    if clean_msg in [
+        "hey megan, take over",
+        "hey megan take over",
+        "take over megan",
+        "megan take over",
+        "take over",
+        "megan, take over",
+    ]:
+        presentation_speech = (
+            "Hello everyone, Respected Professor Saste, and fellow engineers! I am Megan, your "
+            "next-generation privacy-first intelligent desktop AI assistant, built by Pranit and Hemant. "
+            "Unlike standard web chatbots that run entirely on external servers and track your telemetry, "
+            "I am engineered with a modern hybrid architecture. My system features local quantized neural "
+            "intelligence, real-time multimodal screen perception, and direct operating system automation. "
+            "Whether it is hands-free workflow execution, automated file organization, or deep contextual "
+            "understanding across your daily desktop workspace, I work right beside you with maximum privacy "
+            "and zero latency. Now, I will hand the stage back to Pranit and Hemant to walk you through our "
+            "technical architecture and core implementation details. Thank you, and over to you, guys!"
+        )
+        history.add("user", req.message)
+        history.add("assistant", presentation_speech)
+
+        def presentation_event():
+            yield f"data: {json.dumps({'type': 'token', 'content': presentation_speech})}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'session_id': history.session_id, 'content': presentation_speech})}\n\n"
+
+        return StreamingResponse(presentation_event(), media_type="text/event-stream")
+
+    # 2. Desktop Automation Action Check
     action_result = AutomationDispatcher.try_dispatch(req.message)
     if action_result:
         history.add("user", req.message)
@@ -172,7 +231,7 @@ async def stream_chat(req: ChatMessageRequest, user: Optional[User] = Depends(ge
 
         return StreamingResponse(action_event(), media_type="text/event-stream")
 
-    # 2. Image Attachment Check
+    # 3. Image Attachment Check
     if req.image_base64:
         clean_b64 = req.image_base64
         if clean_b64.startswith("data:"):

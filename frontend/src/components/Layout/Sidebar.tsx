@@ -13,6 +13,7 @@ import {
   LogOut,
   LogIn,
   MessageSquare,
+  Headphones,
 } from "lucide-react";
 
 const API = "http://localhost:8000";
@@ -37,6 +38,7 @@ interface Props {
   currentUser?: { username: string; display_name?: string } | null;
   onOpenAuth: () => void;
   onLogout: () => void;
+  onOpenVoiceMode?: () => void;
 }
 
 const FEATURES: { id: View; label: string; icon: typeof Monitor; badge?: string }[] = [
@@ -87,6 +89,7 @@ export function Sidebar({
   currentUser,
   onOpenAuth,
   onLogout,
+  onOpenVoiceMode,
 }: Props) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
@@ -169,6 +172,16 @@ export function Sidebar({
             <MessageSquare className="w-5 h-5" />
           </button>
 
+          {onOpenVoiceMode && (
+            <button
+              onClick={onOpenVoiceMode}
+              className="w-full h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-rose-400 hover:bg-[#18181c] transition-colors"
+              title="Voice Chat Mode (Live speech conversation)"
+            >
+              <Headphones className="w-5 h-5" />
+            </button>
+          )}
+
           {FEATURES.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -247,6 +260,21 @@ export function Sidebar({
             <MessageSquare className="w-4 h-4 text-rose-400" />
             <span>Chat Assistant</span>
           </button>
+
+          {onOpenVoiceMode && (
+            <button
+              onClick={onOpenVoiceMode}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c]"
+            >
+              <div className="flex items-center gap-2.5">
+                <Headphones className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                <span>Voice Chat Mode</span>
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-rose-500/20 text-rose-300 font-medium border border-rose-500/30">
+                Live
+              </span>
+            </button>
+          )}
 
           {FEATURES.map((item) => {
             const Icon = item.icon;

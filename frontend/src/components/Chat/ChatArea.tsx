@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { Sparkles, Terminal, Monitor, FileText, Zap } from "lucide-react";
+import { Sparkles, Terminal, Monitor, FileText, Headphones } from "lucide-react";
 import type { Message } from "../../types/chat";
 import type { Attachment } from "../../hooks/useChat";
 import { MessageBubble } from "./MessageBubble";
@@ -11,6 +11,11 @@ interface Props {
   error: string | null;
   onSend: (message: string, attachment?: Attachment | null) => void;
   currentUser?: { username: string; display_name?: string } | null;
+  onOpenVoiceMode?: () => void;
+  isSpeaking?: boolean;
+  speakingId?: string | null;
+  onSpeak?: (text: string, id: string) => void;
+  onStopSpeech?: () => void;
 }
 
 function TypingIndicator() {
@@ -28,7 +33,18 @@ function TypingIndicator() {
   );
 }
 
-export function ChatArea({ messages, loading, error, onSend, currentUser }: Props) {
+export function ChatArea({
+  messages,
+  loading,
+  error,
+  onSend,
+  currentUser,
+  onOpenVoiceMode,
+  isSpeaking,
+  speakingId,
+  onSpeak,
+  onStopSpeech,
+}: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const visibleMessages = messages.filter(
@@ -49,10 +65,10 @@ export function ChatArea({ messages, loading, error, onSend, currentUser }: Prop
   }, [messages, loading, hasMessages]);
 
   const QUICK_PROMPTS = [
+    { icon: Headphones, label: "Live Voice Mode", action: () => onOpenVoiceMode?.() },
     { icon: Terminal, label: "Open VS Code", prompt: "can u please open vs code for me" },
     { icon: Monitor, label: "Analyze Screen", prompt: "Analyze what is visible on my screen and diagnose any issues." },
     { icon: FileText, label: "Daily Standup", prompt: "Synthesize today's standup report from my git commits and activity." },
-    { icon: Zap, label: "Create desktop note", prompt: "create a notes.txt file on the desktop screen" },
   ];
 
   return (
@@ -81,6 +97,7 @@ export function ChatArea({ messages, loading, error, onSend, currentUser }: Prop
                 disabled={loading}
                 placeholder="type here!"
                 isCentered={true}
+                onOpenVoiceMode={onOpenVoiceMode}
               />
             </div>
 
@@ -91,7 +108,13 @@ export function ChatArea({ messages, loading, error, onSend, currentUser }: Prop
                 return (
                   <button
                     key={idx}
-                    onClick={() => onSend(item.prompt)}
+                    onClick={() => {
+                      if (item.action) {
+                        item.action();
+                      } else if (item.prompt) {
+                        onSend(item.prompt);
+                      }
+                    }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#141418] hover:bg-[#1a1a20] border border-[#27272e] hover:border-rose-500/40 text-xs font-medium text-zinc-300 hover:text-white shadow-sm transition-all"
                   >
                     <Icon className="w-3.5 h-3.5 text-rose-400" />
@@ -109,7 +132,13 @@ export function ChatArea({ messages, loading, error, onSend, currentUser }: Prop
           <div className="flex-1 overflow-y-auto px-4 py-6">
             <div className="max-w-2xl mx-auto">
               {visibleMessages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  isSpeaking={isSpeaking && speakingId === msg.id}
+                  onSpeak={onSpeak}
+                  onStopSpeech={onStopSpeech}
+                />
               ))}
 
               {showTyping && <TypingIndicator />}
@@ -134,6 +163,7 @@ export function ChatArea({ messages, loading, error, onSend, currentUser }: Prop
               disabled={loading}
               placeholder="type here!"
               isCentered={false}
+              onOpenVoiceMode={onOpenVoiceMode}
             />
           </div>
         </div>

@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { X, PanelLeftOpen } from "lucide-react";
 import { useChat } from "./hooks/useChat";
+import { useSpeech } from "./hooks/useSpeech";
 import { Sidebar } from "./components/Layout/Sidebar";
 import { ChatArea } from "./components/Chat/ChatArea";
+import { VoiceModeModal } from "./components/Voice/VoiceModeModal";
 import { ScreenCopilotView } from "./components/Features/ScreenCopilotView";
 import { TimeMachineView } from "./components/Features/TimeMachineView";
 import { StandupView } from "./components/Features/StandupView";
@@ -23,11 +25,13 @@ function getAuthHeader(): Record<string, string> {
 
 export default function App() {
   const { messages, loading, error, sessionId, sendMessage, clearChat, loadSession } = useChat();
+  const speech = useSpeech();
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentView, setCurrentView] = useState<View>("chat");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ username: string; display_name?: string } | null>(() => {
     try {
       const saved = localStorage.getItem("megan_user");
@@ -103,6 +107,7 @@ export default function App() {
           currentUser={currentUser}
           onOpenAuth={() => setAuthModalOpen(true)}
           onLogout={handleLogout}
+          onOpenVoiceMode={() => setVoiceModalOpen(true)}
         />
       </div>
 
@@ -134,6 +139,10 @@ export default function App() {
               currentUser={currentUser}
               onOpenAuth={() => setAuthModalOpen(true)}
               onLogout={handleLogout}
+              onOpenVoiceMode={() => {
+                setMobileMenuOpen(false);
+                setVoiceModalOpen(true);
+              }}
             />
           </div>
         </>
@@ -160,6 +169,11 @@ export default function App() {
             error={error}
             onSend={sendMessage}
             currentUser={currentUser}
+            onOpenVoiceMode={() => setVoiceModalOpen(true)}
+            isSpeaking={speech.isSpeaking}
+            speakingId={speech.speakingId}
+            onSpeak={speech.speak}
+            onStopSpeech={speech.stop}
           />
         </div>
 
@@ -169,6 +183,19 @@ export default function App() {
         {currentView === "standup" && <StandupView />}
         {currentView === "macros" && <MacrosView />}
       </div>
+
+      {/* Interactive Voice Mode Modal */}
+      <VoiceModeModal
+        isOpen={voiceModalOpen}
+        onClose={() => setVoiceModalOpen(false)}
+        onSendMessage={sendMessage}
+        voices={speech.voices}
+        selectedVoice={speech.selectedVoice}
+        onSelectVoice={speech.setSelectedVoice}
+        isSpeaking={speech.isSpeaking}
+        onSpeak={(text) => speech.speak(text)}
+        onStopSpeech={speech.stop}
+      />
 
       {/* User Account / Auth Modal */}
       <AuthModal

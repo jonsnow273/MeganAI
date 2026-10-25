@@ -4,12 +4,15 @@ import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react";
+import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Sparkles, Volume2, VolumeX } from "lucide-react";
 import type { Message } from "../../types/chat";
 
 interface Props {
   message: Message;
   onRegenerate?: () => void;
+  isSpeaking?: boolean;
+  onSpeak?: (text: string, id: string) => void;
+  onStopSpeech?: () => void;
 }
 
 const PROSE_CLASSES = `prose prose-sm max-w-none text-zinc-200
@@ -104,7 +107,7 @@ function nodeText(node: ReactNode): string {
   return "";
 }
 
-export function MessageBubble({ message, onRegenerate }: Props) {
+export function MessageBubble({ message, onRegenerate, isSpeaking, onSpeak, onStopSpeech }: Props) {
   const isUser = message.role === "user";
 
   if (isUser) {
@@ -177,6 +180,33 @@ export function MessageBubble({ message, onRegenerate }: Props) {
         {/* Hover action toolbar */}
         <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <CopyButton text={message.content} />
+
+          {/* Read Aloud Button */}
+          {onSpeak && (
+            <button
+              onClick={() => {
+                if (isSpeaking) {
+                  onStopSpeech?.();
+                } else {
+                  onSpeak(message.content, message.id);
+                }
+              }}
+              className={`p-1.5 rounded-md transition-colors ${
+                isSpeaking
+                  ? "text-rose-400 bg-rose-500/15 ring-1 ring-rose-500/30 animate-pulse"
+                  : "text-zinc-400 hover:text-zinc-100 hover:bg-[#18181c]"
+              }`}
+              aria-label={isSpeaking ? "Stop reading" : "Read aloud"}
+              title={isSpeaking ? "Stop reading" : "Read aloud with Megan's voice"}
+            >
+              {isSpeaking ? (
+                <VolumeX className="w-3.5 h-3.5 text-rose-400" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+          )}
+
           {onRegenerate && (
             <button
               onClick={onRegenerate}

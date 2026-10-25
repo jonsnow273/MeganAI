@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, Mic, MicOff, Send, X, Film } from "lucide-react";
+import { Plus, Mic, MicOff, Send, X, Film, Headphones } from "lucide-react";
 import type { Attachment } from "../../hooks/useChat";
 
 interface Props {
@@ -7,9 +7,10 @@ interface Props {
   disabled: boolean;
   placeholder?: string;
   isCentered?: boolean;
+  onOpenVoiceMode?: () => void;
 }
 
-export function InputBar({ onSend, disabled, placeholder = "type here!", isCentered = false }: Props) {
+export function InputBar({ onSend, disabled, placeholder = "type here!", isCentered = false, onOpenVoiceMode }: Props) {
   const [text, setText] = useState("");
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [isListening, setIsListening] = useState(false);
@@ -216,6 +217,19 @@ export function InputBar({ onSend, disabled, placeholder = "type here!", isCente
             rows={1}
             className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 text-xs md:text-sm leading-relaxed resize-none focus:outline-none disabled:opacity-50 max-h-[160px]"
           />
+
+          {/* Voice Mode Launcher */}
+          {onOpenVoiceMode && (
+            <button
+              onClick={onOpenVoiceMode}
+              type="button"
+              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-zinc-400 hover:text-rose-400 hover:bg-[#1a1a20] transition-colors"
+              title="Open Voice Chat Mode (Live speech conversation)"
+              aria-label="Open Voice Chat Mode"
+            >
+              <Headphones className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           {/* Voice Input / Mic button */}
           <button

@@ -150,7 +150,7 @@ export function useChat() {
           }
 
           if (accumulated.trim()) {
-            return;
+            return accumulated.trim();
           }
         }
       } catch (streamErr) {
@@ -171,6 +171,7 @@ export function useChat() {
               m.id === assistantId ? { ...m, content: data.response } : m
             )
           );
+          return data.response;
         } catch (fallbackErr: any) {
           setMessages((prev) => prev.filter((m) => m.id !== assistantId));
           setError(fallbackErr?.message || "Failed to generate response.");
