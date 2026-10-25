@@ -2,12 +2,38 @@
   "name": "megan-ui",
   "version": "0.1.0",
   "private": true,
+  "description": "Megan AI Desktop Assistant",
+  "main": "electron/main.cjs",
+  "author": "Pranit More & Hemant",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "electron:dev": "electron . --dev",
+    "electron:start": "electron .",
+    "electron:pack": "electron-builder --dir",
+    "electron:dist": "npm run build && electron-builder --win",
+    "desktop": "npm run build && electron .",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "build": {
+    "appId": "com.megan.ai",
+    "productName": "Megan AI",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "../api/static/**/*",
+      "public/**/*"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "public/icon.ico"
+    }
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
@@ -38,6 +64,8 @@
     "@typescript-eslint/parser": "^7.10.0",
     "@vitejs/plugin-react": "^4.3.0",
     "autoprefixer": "^10.4.19",
+    "electron": "^45.0.0",
+    "electron-builder": "^26.7.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.26",

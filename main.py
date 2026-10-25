@@ -111,11 +111,26 @@ def main():
     parser.add_argument("--macro-list", action="store_true", help="List all saved workflow automation macros")
     parser.add_argument("--macro-run", type=str, default=None, help="Replay a workflow macro by name or ID")
     parser.add_argument("--macro-dry-run", action="store_true", help="Simulate macro execution without modifying desktop state")
+    parser.add_argument("--desktop", action="store_true", help="Launch Megan AI as an Electron Desktop Application")
 
     args = parser.parse_args()
 
     if args.info:
         print_system_info()
+        return
+
+    if args.desktop:
+        import subprocess
+        print(BANNER)
+        print("Launching Megan AI Electron Desktop Application...")
+        frontend_dir = PROJECT_ROOT / "frontend"
+        try:
+            cmd = "npx electron ."
+            subprocess.run(cmd, cwd=str(frontend_dir), shell=True)
+        except KeyboardInterrupt:
+            print("\nDesktop application closed.")
+        except Exception as e:
+            print(f"[Error] Failed to launch Electron desktop app: {e}")
         return
 
     if args.focus:

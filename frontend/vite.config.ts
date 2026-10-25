@@ -4,6 +4,7 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [react()],
   resolve: {
     alias: {
@@ -25,7 +26,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../api/static',  // FastAPI serves the built frontend
+    outDir: '../api/static', // FastAPI serves the built frontend
     emptyOutDir: true,
   },
 })
