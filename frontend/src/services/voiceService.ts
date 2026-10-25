@@ -1,7 +1,7 @@
 /**
  * Megan Voice Service.
- * Bridges frontend audio playback to the Edge-TTS backend streaming endpoint,
- * with graceful browser SpeechSynthesis fallback.
+ * High-speed audio playback using Edge-TTS backend streaming with in-memory caching.
+ * Locked to single natural female voice (Jenny) with absolute protection against dual/overlapping speech.
  */
 
 const API = "http://localhost:8000";
@@ -14,87 +14,39 @@ export interface VoiceOption {
   description: string;
 }
 
+export const FEMALE_VOICE: VoiceOption = {
+  id: "en-US-JennyNeural",
+  name: "Jenny (Neural Female)",
+  gender: "Female",
+  locale: "en-US",
+  description: "Natural, crystal-clear conversational female voice",
+};
+
 class VoiceService {
   private currentAudio: HTMLAudioElement | null = null;
   private isAudioPlaying = false;
-  private voicesCache: VoiceOption[] = [];
+  private currentPlaybackId = 0;
 
   /**
-   * Fetch available neural voices from Megan backend.
+   * Return single available female voice.
    */
   async getVoices(): Promise<VoiceOption[]> {
-    if (this.voicesCache.length > 0) {
-      return this.voicesCache;
-    }
-
-    try {
-      const res = await fetch(`${API}/api/voice/voices`);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data.voices)) {
-          this.voicesCache = data.voices;
-          return data.voices;
-        }
-      }
-    } catch (err) {
-      console.warn("Could not load backend voices list:", err);
-    }
-
-    // Default fallback voice list
-    const defaults: VoiceOption[] = [
-      {
-        id: "en-US-JennyNeural",
-        name: "Jenny (US Natural)",
-        gender: "Female",
-        locale: "en-US",
-        description: "Warm, crystal-clear, default assistant voice",
-      },
-      {
-        id: "en-US-AriaNeural",
-        name: "Aria (US Expressive)",
-        gender: "Female",
-        locale: "en-US",
-        description: "Expressive, dynamic conversational tone",
-      },
-      {
-        id: "en-US-GuyNeural",
-        name: "Guy (US Confident)",
-        gender: "Male",
-        locale: "en-US",
-        description: "Confident, smooth masculine voice",
-      },
-      {
-        id: "en-IN-NeerjaNeural",
-        name: "Neerja (India Fluent)",
-        gender: "Female",
-        locale: "en-IN",
-        description: "Natural Indian English accent",
-      },
-      {
-        id: "en-GB-SoniaNeural",
-        name: "Sonia (UK Crisp)",
-        gender: "Female",
-        locale: "en-GB",
-        description: "Crisp British English accent",
-      },
-    ];
-    this.voicesCache = defaults;
-    return defaults;
+    return [FEMALE_VOICE];
   }
 
   /**
-   * Speak text using Edge Neural TTS streaming endpoint.
-   * Automatically falls back to browser SpeechSynthesis on error.
+   * Speak text using Edge Neural TTS.
+   * Absolutely prevents dual/overlapping voices by stopping any active audio first.
    */
   speak(
     text: string,
-    voice: string = "en-US-JennyNeural",
     callbacks?: {
       onStart?: () => void;
       onEnded?: () => void;
       onError?: (err: any) => void;
     }
   ): void {
+    // 1. Immediately abort and silence any current playback
     this.stop();
 
     const trimmed = text.trim();
@@ -103,105 +55,80 @@ class VoiceService {
       return;
     }
 
+    const playbackId = ++this.currentPlaybackId;
+
     try {
-      const url = `${API}/api/voice/speak?text=${encodeURIComponent(trimmed)}&voice=${encodeURIComponent(voice)}`;
+      // Direct stream with cache-friendly URL
+      const url = `${API}/api/voice/speak?text=${encodeURIComponent(trimmed)}`;
       const audio = new Audio(url);
       this.currentAudio = audio;
 
       audio.onplay = () => {
+        if (playbackId !== this.currentPlaybackId) return;
         this.isAudioPlaying = true;
         callbacks?.onStart?.();
       };
 
       audio.onended = () => {
+        if (playbackId !== this.currentPlaybackId) return;
         this.isAudioPlaying = false;
         this.currentAudio = null;
         callbacks?.onEnded?.();
       };
 
       audio.onerror = (e) => {
-        console.warn("Backend TTS stream playback failed, falling back to browser speech synthesis:", e);
+        if (playbackId !== this.currentPlaybackId) return;
         this.isAudioPlaying = false;
         this.currentAudio = null;
-        this.speakBrowserFallback(trimmed, callbacks);
+        console.warn("TTS stream audio error:", e);
+        callbacks?.onError?.(e);
       };
 
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
-          console.warn("Audio autoplay blocked or failed, falling back to browser speech synthesis:", err);
-          this.isAudioPlaying = false;
-          this.currentAudio = null;
-          this.speakBrowserFallback(trimmed, callbacks);
+          // If aborted due to another speech or user interruption, ignore gracefully
+          if (playbackId === this.currentPlaybackId && err.name !== "AbortError") {
+            console.warn("Audio playback exception:", err);
+            this.isAudioPlaying = false;
+            callbacks?.onError?.(err);
+          }
         });
       }
     } catch (err) {
-      console.warn("Audio initialization failed:", err);
-      this.speakBrowserFallback(trimmed, callbacks);
-    }
-  }
-
-  /**
-   * Offline / In-browser speech synthesis fallback.
-   */
-  private speakBrowserFallback(
-    text: string,
-    callbacks?: {
-      onStart?: () => void;
-      onEnded?: () => void;
-      onError?: (err: any) => void;
-    }
-  ): void {
-    if (typeof window === "undefined" || !window.speechSynthesis) {
-      callbacks?.onError?.("Speech synthesis not supported in this browser.");
-      return;
-    }
-
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-
-      utterance.onstart = () => {
-        this.isAudioPlaying = true;
-        callbacks?.onStart?.();
-      };
-
-      utterance.onend = () => {
-        this.isAudioPlaying = false;
-        callbacks?.onEnded?.();
-      };
-
-      utterance.onerror = (e) => {
-        this.isAudioPlaying = false;
-        callbacks?.onError?.(e);
-      };
-
-      window.speechSynthesis.speak(utterance);
-    } catch (err) {
+      console.warn("Voice service exception:", err);
       this.isAudioPlaying = false;
       callbacks?.onError?.(err);
     }
   }
 
   /**
-   * Stop any current speech playback immediately.
+   * Stop any current speech playback immediately and cleanly.
    */
   stop(): void {
+    this.currentPlaybackId++; // Invalidate any pending callbacks
+
     if (this.currentAudio) {
       try {
         this.currentAudio.pause();
         this.currentAudio.currentTime = 0;
+        this.currentAudio.src = "";
+        this.currentAudio.removeAttribute("src");
+        this.currentAudio.onplay = null;
+        this.currentAudio.onended = null;
+        this.currentAudio.onerror = null;
       } catch {
-        // Ignore audio stop errors
+        // Ignore stop cleanup errors
       }
       this.currentAudio = null;
     }
 
+    // Cancel browser synthesis if anything was lingering
     if (typeof window !== "undefined" && window.speechSynthesis) {
       try {
         window.speechSynthesis.cancel();
       } catch {
-        // Ignore cancel errors
+        // Ignore
       }
     }
 

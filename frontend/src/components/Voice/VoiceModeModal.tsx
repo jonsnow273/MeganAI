@@ -1,15 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, MicOff, X, Volume2, Square, Sparkles, ChevronDown, Radio } from "lucide-react";
-import type { VoiceOption } from "../../services/voiceService";
+import { Mic, MicOff, X, Volume2, Square, Sparkles, Radio } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSendMessage: (message: string) => Promise<string | undefined>;
-  voices: VoiceOption[];
-  selectedVoice: string;
-  onSelectVoice: (voiceId: string) => void;
   isSpeaking: boolean;
   onSpeak: (text: string) => void;
   onStopSpeech: () => void;
@@ -17,13 +13,21 @@ interface Props {
 
 type VoiceStatus = "idle" | "listening" | "thinking" | "speaking";
 
+const PRESENTATION_TAKEOVER_SPEECH =
+  "Hello everyone, Respected Professor Saste, and fellow engineers! I am Megan, your " +
+  "next-generation privacy-first intelligent desktop AI assistant, built by Pranit and Hemant. " +
+  "Unlike standard web chatbots that run entirely on external servers and track your telemetry, " +
+  "I am engineered with a modern hybrid architecture. My system features local quantized neural " +
+  "intelligence, real-time multimodal screen perception, and direct operating system automation. " +
+  "Whether it is hands-free workflow execution, automated file organization, or deep contextual " +
+  "understanding across your daily desktop workspace, I work right beside you with maximum privacy " +
+  "and zero latency. Now, I will hand the stage back to Pranit and Hemant to walk you through our " +
+  "technical architecture and core implementation details. Thank you, and over to you, guys!";
+
 export function VoiceModeModal({
   isOpen,
   onClose,
   onSendMessage,
-  voices,
-  selectedVoice,
-  onSelectVoice,
   isSpeaking,
   onSpeak,
   onStopSpeech,
@@ -32,11 +36,15 @@ export function VoiceModeModal({
   const [transcript, setTranscript] = useState("");
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [lastMeganReply, setLastMeganReply] = useState("");
-  const [voiceDropdownOpen, setVoiceDropdownOpen] = useState(false);
 
   const recognitionRef = useRef<any>(null);
   const isSpeakingRef = useRef(isSpeaking);
   isSpeakingRef.current = isSpeaking;
+
+  // Single-flight processing mutex to guarantee NO duplicate voices or parallel triggers
+  const isProcessingRef = useRef(false);
+  const silenceTimerRef = useRef<any>(null);
+  const currentTranscriptRef = useRef("");
 
   // Sync internal status with isSpeaking
   useEffect(() => {
@@ -44,8 +52,19 @@ export function VoiceModeModal({
       setStatus("speaking");
     } else if (status === "speaking") {
       setStatus("idle");
+      isProcessingRef.current = false;
+
+      // Echo prevention: wait 400ms after speech ends before auto-listening again
+      if (isOpen) {
+        const restartTimer = setTimeout(() => {
+          if (isOpen && !isSpeakingRef.current && !isProcessingRef.current) {
+            startListening();
+          }
+        }, 400);
+        return () => clearTimeout(restartTimer);
+      }
     }
-  }, [isSpeaking, status]);
+  }, [isSpeaking, status, isOpen]);
 
   // Start speech recognition when modal opens
   useEffect(() => {
@@ -54,6 +73,8 @@ export function VoiceModeModal({
       onStopSpeech();
       setStatus("idle");
       setTranscript("");
+      isProcessingRef.current = false;
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       return;
     }
 
@@ -61,10 +82,13 @@ export function VoiceModeModal({
 
     return () => {
       stopListening();
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     };
   }, [isOpen]);
 
   const startListening = () => {
+    if (isSpeakingRef.current || isProcessingRef.current) return;
+
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -88,6 +112,8 @@ export function VoiceModeModal({
       recog.lang = "en-US";
 
       recog.onresult = (event: any) => {
+        if (isProcessingRef.current || isSpeakingRef.current) return;
+
         let interim = "";
         let final = "";
 
@@ -100,30 +126,39 @@ export function VoiceModeModal({
           }
         }
 
-        if (interim) {
-          setTranscript(interim);
-        }
+        const candidate = (final || interim).trim();
+        if (candidate) {
+          setTranscript(candidate);
+          currentTranscriptRef.current = candidate;
 
-        if (final.trim()) {
-          const finalClean = final.trim();
-          setTranscript(finalClean);
-          handleFinalSpeech(finalClean);
+          // Clear previous silence detector
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+
+          // If final arrived, commit immediately; if interim, auto-commit after 650ms of silence
+          if (final.trim()) {
+            commitSpeech(final.trim());
+          } else {
+            silenceTimerRef.current = setTimeout(() => {
+              if (currentTranscriptRef.current.trim() && !isProcessingRef.current) {
+                commitSpeech(currentTranscriptRef.current.trim());
+              }
+            }, 650);
+          }
         }
       };
 
       recog.onerror = (e: any) => {
-        console.warn("Speech recognition error:", e.error);
-        if (e.error !== "no-speech") {
+        if (e.error !== "no-speech" && e.error !== "aborted") {
+          console.warn("Speech recognition error:", e.error);
           setStatus("idle");
         }
       };
 
       recog.onend = () => {
-        // Auto-restart listening if not currently speaking or thinking
-        if (isOpen && !isSpeakingRef.current && status !== "thinking") {
+        // Auto-restart listening only if idle and open
+        if (isOpen && !isSpeakingRef.current && !isProcessingRef.current && status === "listening") {
           try {
             recog.start();
-            setStatus("listening");
           } catch {
             // Ignore restart errors
           }
@@ -140,6 +175,10 @@ export function VoiceModeModal({
   };
 
   const stopListening = () => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
@@ -150,50 +189,78 @@ export function VoiceModeModal({
     }
   };
 
-  const handleFinalSpeech = async (userText: string) => {
-    if (!userText.trim()) return;
-
+  const commitSpeech = (cleanText: string) => {
+    if (isProcessingRef.current || !cleanText.trim()) return;
+    isProcessingRef.current = true;
     stopListening();
+    handleFinalSpeech(cleanText);
+  };
+
+  const handleFinalSpeech = async (userText: string) => {
+    const trimmed = userText.trim();
+    if (!trimmed) {
+      isProcessingRef.current = false;
+      startListening();
+      return;
+    }
+
     setStatus("thinking");
-    setLastUserMessage(userText);
+    setLastUserMessage(trimmed);
     setTranscript("");
 
+    // Instant presentation takeover response: bypass LLM round-trip delay entirely
+    const lower = trimmed.toLowerCase().replace(/[^a-z0-9 ]/g, "");
+    if (lower.includes("take over") || lower.includes("takeover")) {
+      setLastMeganReply(PRESENTATION_TAKEOVER_SPEECH);
+      setStatus("speaking");
+      onSpeak(PRESENTATION_TAKEOVER_SPEECH);
+      // Background sync with session history
+      onSendMessage(trimmed).catch(() => {});
+      return;
+    }
+
     try {
-      const reply = await onSendMessage(userText);
+      const reply = await onSendMessage(trimmed);
       if (reply && reply.trim()) {
         setLastMeganReply(reply);
         setStatus("speaking");
         onSpeak(reply);
       } else {
         setStatus("idle");
+        isProcessingRef.current = false;
         startListening();
       }
     } catch (err) {
       console.error("Message send error in Voice Mode:", err);
       setStatus("idle");
+      isProcessingRef.current = false;
       startListening();
     }
   };
 
   const toggleMic = () => {
-    if (status === "listening") {
+    if (status === "speaking") {
+      onStopSpeech();
+      isProcessingRef.current = false;
+      startListening();
+    } else if (status === "listening") {
       stopListening();
       setStatus("idle");
-    } else if (status === "speaking") {
-      onStopSpeech();
-      startListening();
     } else {
+      isProcessingRef.current = false;
       startListening();
     }
   };
 
   const handleTriggerTakeOver = () => {
+    if (isProcessingRef.current) return;
+    stopListening();
+    onStopSpeech();
+    isProcessingRef.current = true;
     handleFinalSpeech("hey megan, take over");
   };
 
   if (!isOpen) return null;
-
-  const currentVoiceObj = voices.find((v) => v.id === selectedVoice);
 
   return (
     <AnimatePresence>
@@ -219,48 +286,16 @@ export function VoiceModeModal({
                   Live
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-400">Neural Conversational Mode</p>
+              <p className="text-[11px] text-zinc-400">Single Female Neural Voice</p>
             </div>
           </div>
 
-          {/* Right Controls: Voice Selector & Close Button */}
+          {/* Right Controls: Single Voice Badge & Close Button */}
           <div className="flex items-center gap-3">
-            {/* Voice Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setVoiceDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#141418] border border-[#27272e] hover:border-zinc-600 text-xs text-zinc-200 transition-colors"
-                title="Select Voice"
-              >
-                <Volume2 className="w-3.5 h-3.5 text-rose-400" />
-                <span className="max-w-[110px] truncate">{currentVoiceObj?.name || "Select Voice"}</span>
-                <ChevronDown className="w-3 h-3 text-zinc-400" />
-              </button>
-
-              {voiceDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#121216] border border-[#27272e] shadow-xl py-1 z-50 animate-fade-in">
-                  <div className="px-3 py-1.5 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider border-b border-[#27272e]">
-                    Neural Voice Models
-                  </div>
-                  {voices.map((v) => (
-                    <button
-                      key={v.id}
-                      onClick={() => {
-                        onSelectVoice(v.id);
-                        setVoiceDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-xs flex flex-col gap-0.5 transition-colors ${
-                        v.id === selectedVoice
-                          ? "bg-rose-500/15 text-rose-300 font-medium"
-                          : "text-zinc-300 hover:bg-[#1a1a20] hover:text-white"
-                      }`}
-                    >
-                      <span className="font-medium">{v.name}</span>
-                      <span className="text-[10px] text-zinc-500">{v.description}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+            {/* Single Voice Indicator */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#141418] border border-[#27272e] text-xs text-zinc-300">
+              <Volume2 className="w-3.5 h-3.5 text-rose-400" />
+              <span className="font-medium">Jenny (Female)</span>
             </div>
 
             {/* Close Button */}
@@ -449,6 +484,7 @@ export function VoiceModeModal({
             <button
               onClick={() => {
                 onStopSpeech();
+                isProcessingRef.current = false;
                 startListening();
               }}
               className="px-4 h-12 rounded-2xl bg-[#141418] hover:bg-[#1c1c22] border border-[#27272e] text-zinc-200 hover:text-white text-xs font-medium flex items-center gap-2 transition-colors"

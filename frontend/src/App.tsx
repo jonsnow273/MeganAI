@@ -189,9 +189,6 @@ export default function App() {
         isOpen={voiceModalOpen}
         onClose={() => setVoiceModalOpen(false)}
         onSendMessage={sendMessage}
-        voices={speech.voices}
-        selectedVoice={speech.selectedVoice}
-        onSelectVoice={speech.setSelectedVoice}
         isSpeaking={speech.isSpeaking}
         onSpeak={(text) => speech.speak(text)}
         onStopSpeech={speech.stop}
