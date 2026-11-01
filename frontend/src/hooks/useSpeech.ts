@@ -1,17 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { voiceService, type VoiceOption } from "../services/voiceService";
+import { voiceService, FEMALE_VOICE, type VoiceOption } from "../services/voiceService";
 
 export function useSpeech() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
-  const [voices, setVoices] = useState<VoiceOption[]>([]);
-  const [selectedVoice, setSelectedVoiceState] = useState<string>(() => {
-    try {
-      return localStorage.getItem("megan_voice_id") || "en-US-JennyNeural";
-    } catch {
-      return "en-US-JennyNeural";
-    }
-  });
+  const [voices] = useState<VoiceOption[]>([FEMALE_VOICE]);
+  const selectedVoice = FEMALE_VOICE.id;
 
   const [autoSpeak, setAutoSpeakState] = useState<boolean>(() => {
     try {
@@ -25,19 +19,6 @@ export function useSpeech() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  // Load available voices on mount
-  useEffect(() => {
-    let mounted = true;
-    voiceService.getVoices().then((loadedVoices) => {
-      if (mounted) {
-        setVoices(loadedVoices);
-      }
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   // Check Web Speech API support
   useEffect(() => {
     const SpeechRecognition =
@@ -45,21 +26,12 @@ export function useSpeech() {
     setSpeechSupported(!!SpeechRecognition);
   }, []);
 
-  const setSelectedVoice = useCallback((voiceId: string) => {
-    setSelectedVoiceState(voiceId);
-    try {
-      localStorage.setItem("megan_voice_id", voiceId);
-    } catch {
-      // Ignore storage errors
-    }
-  }, []);
-
   const setAutoSpeak = useCallback((enabled: boolean) => {
     setAutoSpeakState(enabled);
     try {
       localStorage.setItem("megan_auto_speak", enabled ? "true" : "false");
     } catch {
-      // Ignore storage errors
+      // Ignore
     }
   }, []);
 
@@ -82,7 +54,7 @@ export function useSpeech() {
       setIsSpeaking(true);
       if (id) setSpeakingId(id);
 
-      voiceService.speak(text, selectedVoice, {
+      voiceService.speak(text, {
         onStart: () => {
           setIsSpeaking(true);
           if (id) setSpeakingId(id);
@@ -97,7 +69,7 @@ export function useSpeech() {
         },
       });
     },
-    [isSpeaking, speakingId, selectedVoice, stop]
+    [isSpeaking, speakingId, stop]
   );
 
   const startListening = useCallback(
@@ -116,7 +88,7 @@ export function useSpeech() {
 
       try {
         const recog = new SpeechRecognition();
-        recog.continuous = true;
+        recog.continuous = false; // Single utterance mode prevents overlapping recognition loops
         recog.interimResults = true;
         recog.lang = "en-US";
 
@@ -131,9 +103,9 @@ export function useSpeech() {
               interim += transcript;
             }
           }
-          if (final) {
+          if (final.trim()) {
             onResult(final.trim(), true);
-          } else if (interim) {
+          } else if (interim.trim()) {
             onResult(interim.trim(), false);
           }
         };
@@ -163,7 +135,7 @@ export function useSpeech() {
       try {
         recognitionRef.current.stop();
       } catch {
-        // Ignore stop errors
+        // Ignore
       }
       recognitionRef.current = null;
     }
@@ -189,7 +161,7 @@ export function useSpeech() {
     speakingId,
     voices,
     selectedVoice,
-    setSelectedVoice,
+    setSelectedVoice: () => {},
     autoSpeak,
     setAutoSpeak,
     speak,

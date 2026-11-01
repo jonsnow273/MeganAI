@@ -10,7 +10,7 @@ This document details development milestones, system objectives, and implementat
 - [x] FastAPI REST and WebSocket streaming architecture (`/ws/chat`, `/api/chat/message`)
 - [x] React 18, Vite, and Tailwind CSS dashboard scaffold
 - [x] Cloud OpenAI-compatible LLM gateway client with multimodal vision support
-- [x] Reasoning tag parser for thinking models (`<think>` tags extraction)
+- [x] Reasoning tag parser for thinking models (`<thinking>` tags extraction)
 
 ---
 
@@ -42,3 +42,12 @@ This document details development milestones, system objectives, and implementat
 - [ ] Fast speech-to-text integration with automatic language routing
 - [ ] Windows system tray daemon for background monitoring and quick hotkeys
 - [ ] End-to-end automated regression testing suite
+
+---
+
+## Backlog / Future Considerations
+- [ ] Cross-platform support (macOS/Linux screen capture)
+- [ ] Plugin system for custom tools/skills
+- [ ] Local LLM fallback option (llama.cpp / ollama integration)
+- [ ] Multi-user collaborative features
+- [ ] Advanced macro editor with visual flowchart

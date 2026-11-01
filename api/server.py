@@ -128,7 +128,6 @@ def create_app() -> FastAPI:
     async def health():
         return {
             "status": "healthy",
-            "model_loaded": True,
             "engine": "gateway",
             "copilot": "ready",
         }

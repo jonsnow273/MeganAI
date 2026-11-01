@@ -2,16 +2,18 @@
 Voice REST API routes for Megan.
 Provides high-fidelity Neural Text-to-Speech (TTS), audio transcription, and voice configuration.
 Powered by Microsoft Edge Neural Speech with zero API key requirement.
+Configured with a single high-clarity natural female voice (Jenny Neural) and fast audio caching.
 """
 
 import re
 import json
+import asyncio
 import tempfile
 import base64
 from pathlib import Path
-from typing import Optional, AsyncGenerator
+from typing import Optional, AsyncGenerator, Dict
 from pydantic import BaseModel
-from fastapi import APIRouter, HTTPException, Request, Query
+from fastapi import APIRouter, HTTPException, Request, Query, Response
 from fastapi.responses import StreamingResponse
 
 import edge_tts
@@ -21,46 +23,33 @@ router = APIRouter(prefix="/api/voice", tags=["Voice"])
 
 _voice_pipeline = None
 
-# Curated list of high-fidelity neural voices
+# Single locked female neural voice
+DEFAULT_VOICE = "en-US-JennyNeural"
+
 AVAILABLE_VOICES = [
     {
-        "id": "en-US-JennyNeural",
-        "name": "Jenny (US Natural)",
+        "id": DEFAULT_VOICE,
+        "name": "Jenny (Neural Female)",
         "gender": "Female",
         "locale": "en-US",
-        "description": "Warm, crystal-clear, default assistant voice",
-    },
-    {
-        "id": "en-US-AriaNeural",
-        "name": "Aria (US Expressive)",
-        "gender": "Female",
-        "locale": "en-US",
-        "description": "Expressive, dynamic conversational tone",
-    },
-    {
-        "id": "en-US-GuyNeural",
-        "name": "Guy (US Confident)",
-        "gender": "Male",
-        "locale": "en-US",
-        "description": "Confident, smooth masculine voice",
-    },
-    {
-        "id": "en-IN-NeerjaNeural",
-        "name": "Neerja (India Fluent)",
-        "gender": "Female",
-        "locale": "en-IN",
-        "description": "Natural Indian English accent",
-    },
-    {
-        "id": "en-GB-SoniaNeural",
-        "name": "Sonia (UK Crisp)",
-        "gender": "Female",
-        "locale": "en-GB",
-        "description": "Crisp British English accent",
-    },
+        "description": "Natural, crystal-clear conversational female voice",
+    }
 ]
 
-DEFAULT_VOICE = "en-US-JennyNeural"
+# Fast in-memory audio cache for zero-latency instant playback
+_AUDIO_CACHE: Dict[str, bytes] = {}
+
+PRESENTATION_SPEECH = (
+    "Hello everyone, Respected Professor Saste, and fellow engineers! I am Megan, your "
+    "next-generation privacy-first intelligent desktop AI assistant, built by Pranit and Hemant. "
+    "Unlike standard web chatbots that run entirely on external servers and track your telemetry, "
+    "I am engineered with a modern hybrid architecture. My system features local quantized neural "
+    "intelligence, real-time multimodal screen perception, and direct operating system automation. "
+    "Whether it is hands-free workflow execution, automated file organization, or deep contextual "
+    "understanding across your daily desktop workspace, I work right beside you with maximum privacy "
+    "and zero latency. Now, I will hand the stage back to Pranit and Hemant to walk you through our "
+    "technical architecture and core implementation details. Thank you, and over to you, guys!"
+)
 
 
 class SpeakRequest(BaseModel):
@@ -68,12 +57,6 @@ class SpeakRequest(BaseModel):
     voice: Optional[str] = DEFAULT_VOICE
     rate: Optional[str] = "+0%"
     pitch: Optional[str] = "+0Hz"
-
-
-def init(voice_pipeline=None):
-    """Wire up voice pipeline."""
-    global _voice_pipeline
-    _voice_pipeline = voice_pipeline
 
 
 def clean_text_for_speech(text: str) -> str:
@@ -133,17 +116,56 @@ def clean_text_for_speech(text: str) -> str:
     return cleaned or text.strip()
 
 
-async def stream_edge_tts(text: str, voice: str, rate: str = "+0%", pitch: str = "+0Hz") -> AsyncGenerator[bytes, None]:
-    """Generate and stream MP3 audio bytes using edge-tts."""
+async def synthesize_speech_bytes(text: str, voice: str = DEFAULT_VOICE, rate: str = "+0%", pitch: str = "+0Hz") -> bytes:
+    """Generate audio bytes via edge-tts with in-memory caching for zero latency."""
+    cache_key = f"{text}_{voice}_{rate}_{pitch}"
+    if cache_key in _AUDIO_CACHE:
+        return _AUDIO_CACHE[cache_key]
+
     communicate = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch)
+    chunks = []
     async for chunk in communicate.stream():
         if chunk["type"] == "audio":
-            yield chunk["data"]
+            chunks.append(chunk["data"])
+
+    audio_bytes = b"".join(chunks)
+
+    # Manage cache capacity
+    if len(_AUDIO_CACHE) > 100:
+        _AUDIO_CACHE.pop(next(iter(_AUDIO_CACHE)))
+
+    if audio_bytes:
+        _AUDIO_CACHE[cache_key] = audio_bytes
+
+    return audio_bytes
+
+
+async def prewarm_cache():
+    """Pre-generate common phrases so presentation demos trigger instantly."""
+    try:
+        await synthesize_speech_bytes(PRESENTATION_SPEECH, DEFAULT_VOICE)
+        logger.info("Voice cache pre-warmed for presentation intro speech.")
+    except Exception as e:
+        logger.warning(f"Voice prewarm failed: {e}")
+
+
+def init(voice_pipeline=None):
+    """Wire up voice pipeline and trigger background prewarm."""
+    global _voice_pipeline
+    _voice_pipeline = voice_pipeline
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.create_task(prewarm_cache())
+        else:
+            loop.run_until_complete(prewarm_cache())
+    except Exception:
+        pass
 
 
 @router.get("/voices")
 async def get_available_voices():
-    """Return available neural voices for Megan."""
+    """Return available neural voices for Megan (single female voice)."""
     return {
         "voices": AVAILABLE_VOICES,
         "default": DEFAULT_VOICE,
@@ -158,30 +180,34 @@ async def voice_status():
         "tts_engine": "edge-tts",
         "tts_ready": True,
         "default_voice": DEFAULT_VOICE,
-        "voices_count": len(AVAILABLE_VOICES),
+        "voices_count": 1,
+        "cached_phrases": len(_AUDIO_CACHE),
     }
 
 
 @router.post("/speak")
 async def speak_text_post(req: SpeakRequest):
     """
-    Stream high-quality neural speech audio for the requested text.
+    Stream or deliver high-quality neural speech audio for the requested text.
     Returns audio/mpeg stream directly playable by browser Audio element.
     """
     speech_text = clean_text_for_speech(req.text)
     if not speech_text:
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
 
-    selected_voice = req.voice or DEFAULT_VOICE
-    logger.info(f"Generating TTS for: '{speech_text[:60]}...' with voice {selected_voice}")
+    selected_voice = DEFAULT_VOICE
 
     try:
-        return StreamingResponse(
-            stream_edge_tts(speech_text, selected_voice, rate=req.rate or "+0%", pitch=req.pitch or "+0Hz"),
+        audio_bytes = await synthesize_speech_bytes(
+            speech_text, selected_voice, rate=req.rate or "+0%", pitch=req.pitch or "+0Hz"
+        )
+        return Response(
+            content=audio_bytes,
             media_type="audio/mpeg",
             headers={
                 "Content-Type": "audio/mpeg",
-                "Cache-Control": "no-cache",
+                "Content-Length": str(len(audio_bytes)),
+                "Cache-Control": "public, max-age=3600",
                 "Accept-Ranges": "bytes",
             },
         )
@@ -198,20 +224,26 @@ async def speak_text_get(
     pitch: Optional[str] = Query("+0Hz", description="Pitch adjustment"),
 ):
     """
-    GET endpoint for direct audio streaming in <audio src="..."> tags.
+    GET endpoint for direct audio playback in <audio src="..."> tags.
+    Returns complete audio with Content-Length so browser playback begins instantly.
     """
     speech_text = clean_text_for_speech(text)
     if not speech_text:
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
 
-    selected_voice = voice or DEFAULT_VOICE
+    selected_voice = DEFAULT_VOICE
+
     try:
-        return StreamingResponse(
-            stream_edge_tts(speech_text, selected_voice, rate=rate, pitch=pitch),
+        audio_bytes = await synthesize_speech_bytes(
+            speech_text, selected_voice, rate=rate or "+0%", pitch=pitch or "+0Hz"
+        )
+        return Response(
+            content=audio_bytes,
             media_type="audio/mpeg",
             headers={
                 "Content-Type": "audio/mpeg",
-                "Cache-Control": "no-cache",
+                "Content-Length": str(len(audio_bytes)),
+                "Cache-Control": "public, max-age=3600",
                 "Accept-Ranges": "bytes",
             },
         )
