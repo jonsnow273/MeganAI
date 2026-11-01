@@ -168,11 +168,14 @@ MeganAI/
 │   └── service.py           # Memory background coordinator
 ├── organizer/               # AI-powered file organizer subsystem
 │   ├── audit.py             # JSON move audit log with one-click undo
-│   ├── file_classifier.py   # Two-tier classifier (extensions + LLM fallback)
+│   ├── classifier.py        # Two-tier classifier (extensions + LLM fallback)
+│   ├── rules.py             # Classification rules and patterns
 │   ├── mover.py             # Duplicate suppression with SHA-256
-│   └── service.py           # Watchdog directory observer service
-├── reports/                 # Work synthesis and reporting
-│   └── standup_generator.py # Git commit, focus hour, and memory aggregator
+│   ├── watcher.py           # Watchdog directory observer service
+│   └── service.py           # Organizer coordinator
+├── standup/                 # Work synthesis and reporting
+│   ├── generator.py         # Git commit, focus hour, and memory aggregator
+│   └── aggregators.py       # Git, focus, and memory data collectors
 ├── voice/                   # Speech recognition pipeline
 │   ├── pipeline.py          # Microphone audio processor
 │   └── transcriber.py       # Whisper speech-to-text wrapper

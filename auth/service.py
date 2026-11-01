@@ -9,7 +9,7 @@ import json
 import os
 import time
 import base64
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from core import logger
@@ -136,7 +136,7 @@ class AuthService:
                 return None
 
             # Update last_login
-            now = datetime.utcnow().isoformat()
+            now = datetime.now(timezone.utc).isoformat()
             db.execute(
                 "UPDATE users SET last_login = ? WHERE id = ?",
                 (now, row["id"]),

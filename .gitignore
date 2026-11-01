@@ -109,6 +109,9 @@ wake_word_data/
 ehthumbs.db
 *.lnk
 
+# Frontend build output (committed separately, not tracked)
+api/static/*
+
 # Node / Frontend
 node_modules/
 frontend/node_modules/

@@ -1,50 +1,9 @@
 # ============================================================
-# Megan — requirements.txt
+# Megan — Core Requirements (Production)
 # ============================================================
 # Install: pip install -r requirements.txt
 # Python 3.10+ required
 # ============================================================
-
-# ──────────────────────────────────────────────────────────
-# CORE: Local LLM
-# ──────────────────────────────────────────────────────────
-torch>=2.2.0                   # PyTorch - GPU/CPU tensor engine
-transformers>=4.40.0           # HuggingFace Transformers - model loading & tokenizers
-accelerate>=0.28.0             # HuggingFace Accelerate - device management & quantization
-bitsandbytes>=0.43.0           # 4-bit / 8-bit quantization (reduces VRAM by up to 75%)
-sentencepiece>=0.2.0           # Tokenizer for Mistral / LLaMA models
-protobuf>=4.25.0               # Required by some tokenizer configs
-
-# ──────────────────────────────────────────────────────────
-# ACTIVATION STEERING
-# ──────────────────────────────────────────────────────────
-transformer-lens>=1.18.0       # TransformerLens - mechanistic interpretability hooks
-einops>=0.7.0                  # Tensor ops used heavily by TransformerLens
-fancy-einsum>=0.0.3            # Named einsum (TransformerLens dependency)
-
-# ──────────────────────────────────────────────────────────
-# VOICE: Speech-to-Text (Whisper)
-# ──────────────────────────────────────────────────────────
-openai-whisper>=20231117       # OpenAI Whisper - local multilingual STT
-sounddevice>=0.4.6             # Real-time microphone audio capture
-soundfile>=0.12.1              # Audio file I/O
-numpy>=1.26.0                  # Numerical arrays (audio processing)
-scipy>=1.12.0                  # Signal processing
-
-# ──────────────────────────────────────────────────────────
-# VOICE: Wake Word Detection
-# ──────────────────────────────────────────────────────────
-openwakeword>=0.6.0            # "Hey Megan" local wake word detection
-onnxruntime>=1.17.0            # ONNX runtime for wake word model inference
-pyaudio>=0.2.14                # Audio stream backend (alternative to sounddevice)
-
-# ──────────────────────────────────────────────────────────
-# PC AUTOMATION
-# ──────────────────────────────────────────────────────────
-pyautogui>=0.9.54              # GUI automation (mouse, keyboard)
-psutil>=5.9.0                  # Process management (open/close apps)
-send2trash>=1.8.3              # Safe deletion (sends to recycle bin, not permanent)
-watchdog>=4.0.0                # Filesystem monitoring
 
 # ──────────────────────────────────────────────────────────
 # BACKEND API (FastAPI - serves React frontend & WebSocket)
@@ -55,6 +14,14 @@ websockets>=12.0               # WebSocket support for streaming chat & voice
 python-multipart>=0.0.9        # File upload support (for audio chunks)
 httpx>=0.27.0                  # Async HTTP client (for internal service calls)
 pydantic>=2.7.0                # Data validation & serialization (FastAPI uses this)
+
+# ──────────────────────────────────────────────────────────
+# PC AUTOMATION
+# ──────────────────────────────────────────────────────────
+pyautogui>=0.9.54              # GUI automation (mouse, keyboard)
+psutil>=5.9.0                  # Process management (open/close apps)
+send2trash>=1.8.3              # Safe deletion (sends to recycle bin, not permanent)
+watchdog>=4.0.0                # Filesystem monitoring
 
 # ──────────────────────────────────────────────────────────
 # SYSTEM TRAY (Background Mode)
